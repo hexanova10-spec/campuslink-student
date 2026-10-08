@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { createStudentApplication, listStudentApplications, withdrawStudentApplication } from './src/services/recruitmentRepository.js';
+import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
@@ -885,6 +885,10 @@ app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (r
   data.applications.splice(appIndex, 1);
   res.json({ message: 'Application successfully withdrawn' });
 });
+
+app.get('/api/student/unified/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentInterviews(req.user!.studentId)); } catch { return res.json([]); } });
+app.get('/api/student/unified/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentOffers(req.user!.studentId)); } catch { return res.json([]); } });
+app.get('/api/student/unified/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentNotifications(req.user!.studentId)); } catch { return res.json([]); } });
 
 // ---------------------------------------------------------
 // 17. INTERVIEW SCHEDULE
