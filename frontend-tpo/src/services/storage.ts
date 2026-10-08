@@ -218,6 +218,20 @@ class RepositoryService {
       details: `Switched session to ${user.name} (${user.role})`
     });
     this.save();
+    void (async () => {
+      try {
+        const session = await fetch('/api/tpo/auth/dev-session', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({tpoId:userId,institutionId:user.institutionId||'campuslink'})
+        });
+        if (session.ok) {
+          const data=await session.json();
+          localStorage.setItem(TPO_TOKEN_KEY,data.token);
+          await this.hydrateFromBackend();
+        }
+      } catch (error) { console.warn('TPO session switch sync failed', error); }
+    })();
   }
 
   public setSelectedCollegeFilter(collegeId?: string) {
