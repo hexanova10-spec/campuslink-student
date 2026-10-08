@@ -282,9 +282,9 @@ export const INITIAL_RECRUITERS: Recruiter[] = [
   {
     id: 'recruiter-apex-1',
     companyId: 'company-apex-101',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@apexfintech.example.com',
-    designation: 'Head of University Relations',
+    name: 'Rajashree Sahoo',
+    email: 'rajashree.sahoo@apexfintech.example.com',
+    designation: 'Head of University Relations & Talent Acquisition',
     phone: '+91 98201 44521',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     role: 'RECRUITER_ADMIN',
@@ -828,7 +828,7 @@ const EXPANDED_RECRUITER_STUDENTS: StudentProfile[] = Array.from({ length: 125 }
 const SIDDHARTH_RECRUITER_PROFILE: StudentProfile = {
   id: 'stu-siddharth-das',
   fullName: 'Siddharth Das',
-  email: 'aarav.sharma@campus.edu',
+  email: 'siddharth.das@campus.edu',
   phone: '+91 98765 43210',
   avatarUrl: 'https://i.pravatar.cc/120?img=12',
   collegeName: 'KIIT University, Bhubaneswar',
