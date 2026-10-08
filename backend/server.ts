@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import recruiterRouter from './recruiterRoutes';
+import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications, studentOfferDecision } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
@@ -24,10 +24,6 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026';
 
 app.use(express.json({ limit: '15mb' }));
-
-// Shared recruiter API surface. Student routes remain in this server for now;
-// recruiter state will be moved behind the common database layer in the next migration.
-app.use(recruiterRouter);
 
 // ---------------------------------------------------------
 // JWT Authorization Middleware
@@ -821,13 +817,15 @@ app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: Au
 // ---------------------------------------------------------
 // 15 & 16. APPLICATIONS & EXPLAINABLE REJECTION
 // ---------------------------------------------------------
-app.get('/api/student/applications', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/student/applications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await listStudentApplications(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.applications);
 });
 
-app.post('/api/student/applications/apply', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/applications/apply', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await createStudentApplication(req.user!.studentId, req.body.jobId); if (!unified.error) { const j:any = unified.job; return res.status(201).json({ message: 'Application submitted successfully', application: { ...unified.application, company_name: j.company_name, role_title: j.title, ctc: j.ctc_max_lpa ? ((j.ctc_min_lpa || j.ctc_max_lpa) + '-' + j.ctc_max_lpa + ' LPA') : '', location: j.location || '', allow_withdrawal: true } }); } if (unified.error === 'ALREADY_APPLIED') return res.status(400).json({ error: 'You have already applied for this placement drive' }); if (unified.error === 'JOB_NOT_FOUND') return res.status(404).json({ error: 'Job drive not found' }); if (unified.error === 'INELIGIBLE_CGPA' || unified.error === 'INELIGIBLE_BACKLOGS' || unified.error === 'INELIGIBLE_BRANCH' || unified.error === 'INELIGIBLE_GRADUATION_YEAR') return res.status(400).json({ error: unified.error }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
@@ -871,7 +869,8 @@ app.post('/api/student/applications/apply', authenticateStudent, (req: Authentic
   res.status(201).json({ message: 'Application submitted successfully', application: newApp });
 });
 
-app.post('/api/student/applications/:id/withdraw', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await withdrawStudentApplication(req.user!.studentId, req.params.id); if (unified) return res.json({ message: 'Application successfully withdrawn' }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
@@ -886,6 +885,10 @@ app.post('/api/student/applications/:id/withdraw', authenticateStudent, (req: Au
   data.applications.splice(appIndex, 1);
   res.json({ message: 'Application successfully withdrawn' });
 });
+
+app.get('/api/student/unified/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentInterviews(req.user!.studentId)); } catch { return res.json([]); } });
+app.get('/api/student/unified/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentOffers(req.user!.studentId)); } catch { return res.json([]); } });
+app.get('/api/student/unified/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentNotifications(req.user!.studentId)); } catch { return res.json([]); } });
 
 // ---------------------------------------------------------
 // 17. INTERVIEW SCHEDULE
@@ -1037,36 +1040,22 @@ app.get('/api/student/offers', authenticateStudent, (req: AuthenticatedRequest, 
   res.json(data.offers);
 });
 
-app.post('/api/student/offers/:id/decision', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/offers/:id/decision', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const unified = await studentOfferDecision(req.user!.studentId, req.params.id, req.body?.decision);
+    if (!unified.error) return res.json({ message: `Offer marked as ${unified.offer.status}`, offer: unified.offer });
+    if (unified.error === 'OFFER_NOT_FOUND') return res.status(404).json({ error: 'Offer not found' });
+    if (unified.error === 'INVALID_DECISION') return res.status(400).json({ error: 'Decision must be ACCEPTED or DECLINED' });
+    if (unified.error === 'OFFER_ALREADY_DECIDED') return res.status(400).json({ error: `Offer already marked as ${unified.status}` });
+  } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const { decision } = req.body; // 'ACCEPTED' | 'DECLINED'
+  const { decision } = req.body;
   const offer = data.offers.find(o => o.id === req.params.id);
   if (!offer) return res.status(404).json({ error: 'Offer not found' });
-
-  if (decision === 'ACCEPTED') {
-    offer.status = 'ACCEPTED';
-    // If student accepts, update application state as well
-    const appRecord = data.applications.find(a => a.company_name === offer.company_name);
-    if (appRecord) appRecord.status = 'ACCEPTED';
-
-    data.notifications.unshift({
-      id: `notif-${Date.now()}`,
-      student_id: data.student.id,
-      title: `Offer Accepted: ${offer.company_name}!`,
-      message: `Congratulations! You accepted the placement offer of ${offer.ctc}. Please upload pre-joining verification documents.`,
-      category: 'document',
-      is_read: false,
-      action_route: 'documents',
-      created_at: new Date().toISOString()
-    });
-  } else if (decision === 'DECLINED') {
-    offer.status = 'DECLINED';
-    const appRecord = data.applications.find(a => a.company_name === offer.company_name);
-    if (appRecord) appRecord.status = 'DECLINED';
-  }
-
+  if (decision === 'ACCEPTED') { offer.status = 'ACCEPTED'; }
+  else if (decision === 'DECLINED') { offer.status = 'DECLINED'; }
+  else return res.status(400).json({ error: 'Decision must be ACCEPTED or DECLINED' });
   offer.updated_at = new Date().toISOString();
   res.json({ message: `Offer marked as ${offer.status}`, offer });
 });
@@ -1195,28 +1184,15 @@ app.get('/api/db/schema', (req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------
-// Mount Vite Middleware (Dev) or Static Assets (Prod)
+// Shared API health check
 // ---------------------------------------------------------
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req: Request, res: Response) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-    });
-  }
-
-  app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`[CampusLink Student] Server active on port ${PORT}`);
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({
+    ok: true,
+    service: 'campuslink-backend',
+    port: Number(PORT),
+    timestamp: new Date().toISOString(),
   });
-}
-
-startServer().catch(err => {
-  console.error('Failed to start server:', err);
 });
+
+export { app };
