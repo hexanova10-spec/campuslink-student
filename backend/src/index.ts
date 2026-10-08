@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import app from '../server.js';
+import { app } from '../server.js';
 import { databaseHealth } from './config/db.js';
 import { registerRecruiterRoutes } from './routes/recruiter.js';
 import { registerTpoRoutes } from './routes/tpo.js';
