@@ -79,31 +79,34 @@ export const Header: React.FC = () => {
           </div>
          <div>
   <div className="flex flex-col items-start">
-    <span
-      className={`font-extrabold tracking-tight text-base ${
-        isLight ? "text-slate-900" : "text-white"
-      }`}
-    >
-      CAMPUS<span className="text-blue-600">LINK</span>
-    </span>
+    <div className="flex items-center gap-2">
+      <span
+        className={`font-extrabold tracking-tight text-base ${
+          isLight ? "text-slate-900" : "text-white"
+        }`}
+      >
+        CAMPUS<span className="text-blue-600">LINK</span>
+      </span>
 
-    <span
-      className={`mt-0.5 text-[11px] px-2 py-0.5 rounded-full font-mono font-bold border ${
-        isLight
-          ? "bg-blue-50 border-blue-200 text-blue-700"
-          : "bg-blue-600/20 border-blue-400/30 text-blue-300"
+      <span
+        className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold border uppercase ${
+          isLight
+            ? "bg-blue-50 border-blue-200 text-blue-700"
+            : "bg-blue-600/20 border-blue-400/30 text-blue-300"
+        }`}
+      >
+        RECRUITER
+      </span>
+    </div>
+
+    <p
+      className={`text-[10px] uppercase tracking-widest font-mono mt-0.5 ${
+        isLight ? "text-slate-500" : "text-slate-400"
       }`}
     >
-      RECRUITER
-    </span>
+      Placement Workspace
+    </p>
   </div>
-
-  <p
-    className={`text-[10px] uppercase tracking-widest font-mono ${
-      isLight ? "text-slate-500" : "text-slate-400"
-    }`}
-  >
-  </p>
 </div>
         </div>
 
