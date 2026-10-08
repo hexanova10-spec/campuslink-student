@@ -35,7 +35,7 @@ export const INITIAL_INSTITUTIONS: Institution[] = [
     totalPlaced: 628,
     averagePackageLPA: 12.4,
     highestPackageLPA: 54.0,
-    tpoHeadName: 'Dr. Rajesh Nair',
+    tpoHeadName: 'Mrutyunjya Dash',
     tpoEmail: 'tpo.apex@campuslink.edu',
     tpoPhone: '+91 98230 44551'
   },
@@ -54,7 +54,7 @@ export const INITIAL_INSTITUTIONS: Institution[] = [
     totalPlaced: 710,
     averagePackageLPA: 14.2,
     highestPackageLPA: 62.5,
-    tpoHeadName: 'Dr. Sunita Kulkarni',
+    tpoHeadName: 'Sisira Kanta Padhi',
     tpoEmail: 'tpo.metro@campuslink.edu',
     tpoPhone: '+91 94481 99220'
   },
@@ -82,7 +82,7 @@ export const INITIAL_INSTITUTIONS: Institution[] = [
 export const INITIAL_USERS: User[] = [
   {
     id: 'user-tpo-apex',
-    name: 'Dr. Rajesh Nair',
+    name: 'Mrutyunjya Dash',
     email: 'tpo.apex@campuslink.edu',
     role: 'COLLEGE_TPO',
     institutionId: 'inst-apex-01',
@@ -94,7 +94,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-tpo-metro',
-    name: 'Dr. Sunita Kulkarni',
+    name: 'Sisira Kanta Padhi',
     email: 'tpo.metro@campuslink.edu',
     role: 'COLLEGE_TPO',
     institutionId: 'inst-metro-02',
@@ -106,7 +106,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-sysadmin',
-    name: 'Samantha Vance',
+    name: 'Ronali Mohanty',
     email: 'admin.global@campuslink.edu',
     role: 'SYSTEM_ADMIN',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
@@ -1269,7 +1269,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     id: 'aud-001',
     collegeId: 'inst-apex-01',
     userId: 'user-tpo-apex',
-    userName: 'Dr. Rajesh Nair',
+    userName: 'Mrutyunjya Dash',
     userRole: 'COLLEGE_TPO',
     action: 'JOB_APPROVAL',
     resourceType: 'Job',
@@ -1282,7 +1282,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     id: 'aud-002',
     collegeId: 'inst-apex-01',
     userId: 'user-tpo-apex',
-    userName: 'Dr. Rajesh Nair',
+    userName: 'Mrutyunjya Dash',
     userRole: 'COLLEGE_TPO',
     action: 'CANDIDATE_RELEASE',
     resourceType: 'CandidateAccess',
@@ -1295,7 +1295,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     id: 'aud-003',
     collegeId: 'inst-apex-01',
     userId: 'user-tpo-apex',
-    userName: 'Dr. Rajesh Nair',
+    userName: 'Mrutyunjya Dash',
     userRole: 'COLLEGE_TPO',
     action: 'DOCUMENT_VERIFICATION',
     resourceType: 'Document',
@@ -1307,7 +1307,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   {
     id: 'aud-004',
     userId: 'user-sysadmin',
-    userName: 'Samantha Vance',
+    userName: 'Ronali Mohanty',
     userRole: 'SYSTEM_ADMIN',
     action: 'ADMIN_CONFIG_UPDATE',
     resourceType: 'SystemConfig',
