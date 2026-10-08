@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications, studentOfferDecision } from './src/services/recruitmentRepository.js';
+import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications, studentOfferDecision, markStudentNotificationRead } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
@@ -893,7 +893,8 @@ app.get('/api/student/unified/notifications', authenticateStudent, async (req: A
 // ---------------------------------------------------------
 // 17. INTERVIEW SCHEDULE
 // ---------------------------------------------------------
-app.get('/api/student/interviews', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/student/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await studentInterviews(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.interviews);
@@ -1034,7 +1035,8 @@ app.post('/api/student/ai/chat', authenticateStudent, async (req: AuthenticatedR
 // ---------------------------------------------------------
 // 21. OFFERS
 // ---------------------------------------------------------
-app.get('/api/student/offers', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/student/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await studentOffers(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.offers);
@@ -1101,16 +1103,17 @@ app.delete('/api/student/documents/:id', authenticateStudent, (req: Authenticate
 // ---------------------------------------------------------
 // 23. NOTIFICATIONS
 // ---------------------------------------------------------
-app.get('/api/student/notifications', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/student/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await studentNotifications(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.notifications);
 });
 
-app.post('/api/student/notifications/:id/read', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/notifications/:id/read', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await markStudentNotificationRead(req.user!.studentId, req.params.id); if (unified) return res.json({ message: 'Marked as read', notification: unified }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
-
   const notif = data.notifications.find(n => n.id === req.params.id);
   if (notif) notif.is_read = true;
   res.json({ message: 'Marked as read' });
