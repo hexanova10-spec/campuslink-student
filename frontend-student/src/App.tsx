@@ -111,47 +111,57 @@ const MainAppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/50 to-slate-100/60 dark:from-[#050c22] dark:via-[#08153b] dark:to-[#040816] text-slate-900 dark:text-slate-100 flex flex-col relative overflow-x-clip transition-colors duration-300">
-      {/* Radiant Royal Blue Transparent Orbs */}
-      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/15 dark:bg-blue-600/25 blur-[150px] rounded-full pointer-events-none -z-10 royal-glow" />
-      <div className="fixed bottom-10 right-1/4 w-[500px] h-[500px] bg-indigo-600/15 dark:bg-blue-500/20 blur-[160px] rounded-full pointer-events-none -z-10" />
-      <div className="fixed top-1/2 left-10 w-[350px] h-[350px] bg-cyan-500/10 dark:bg-blue-700/15 blur-[130px] rounded-full pointer-events-none -z-10" />
-
-      {/* Top Navbar */}
-      <Navbar
-        onOpenNotifications={() => setCurrentScreen('notifications')}
-        unreadCount={unreadCount}
-        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-        isSidebarOpen={isSidebarOpen}
-      />
-
-      {/* Conditionally rendered Sidebar Drawer (only open if user requests) */}
-      <Sidebar
-        currentScreen={currentScreen}
-        onNavigate={(screen) => setCurrentScreen(screen)}
-        unreadCount={unreadCount}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-
-      {/* Main Content Area */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <main className="w-full">
-          {renderScreen()}
-        </main>
+    <div
+      className={`min-h-screen relative flex flex-col font-sans antialiased transition-colors duration-300 selection:bg-blue-600 selection:text-white ${
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#F8FAFC] text-slate-900'
+      }`}
+    >
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className={`absolute -top-40 left-1/4 w-96 h-96 rounded-full filter blur-[120px] transition-opacity ${
+          isDark ? 'bg-blue-700/20 opacity-30' : 'bg-blue-100/60 opacity-70'
+        }`} />
+        <div className={`absolute top-1/2 -right-20 w-96 h-96 rounded-full filter blur-[140px] transition-opacity ${
+          isDark ? 'bg-blue-600/15 opacity-20' : 'bg-blue-50/80 opacity-60'
+        }`} />
       </div>
 
-      {/* Quick Floating Navigator Button when sidebar is closed */}
-      {!isSidebarOpen && (
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed bottom-6 left-6 z-30 flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white font-bold text-xs shadow-xl shadow-blue-600/40 hover:scale-105 transition-all border border-white/30 backdrop-blur-xl"
-          title="Open Navigation Menu"
-        >
-          <Compass className="w-4 h-4 text-cyan-200 animate-spin-slow" />
-          <span>Menu (24 Modules)</span>
-        </button>
-      )}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <Navbar
+          onOpenNotifications={() => setCurrentScreen('notifications')}
+          unreadCount={unreadCount}
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          isSidebarOpen={isSidebarOpen}
+        />
+
+        <div className="flex-1 flex max-w-[1720px] w-full mx-auto relative">
+          <Sidebar
+            currentScreen={currentScreen}
+            onNavigate={(screen) => setCurrentScreen(screen)}
+            unreadCount={unreadCount}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className={`fixed bottom-6 left-6 z-40 px-3.5 py-2.5 rounded-full border shadow-2xl flex items-center gap-2 text-xs font-bold transition-all cursor-pointer hover:scale-105 ${
+                isDark
+                  ? 'bg-slate-900/90 backdrop-blur-xl border-blue-500/40 text-blue-300 shadow-blue-900/40 hover:bg-slate-800'
+                  : 'bg-white/90 backdrop-blur-xl border-blue-200 text-blue-700 shadow-blue-500/15 hover:bg-blue-50'
+              }`}
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4 text-blue-500" />
+              <span>Navigation Menu</span>
+            </button>
+          )}
+
+          <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto max-w-full">
+            {renderScreen()}
+          </main>
+        </div>
+      </div>
     </div>
   );
 };
