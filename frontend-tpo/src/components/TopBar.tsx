@@ -123,8 +123,13 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
           )}
         </button>
 
-        {/* CampusLink Brand Lockup — shared with Student & Recruiter */}
-        <div className="flex items-center gap-2.5 cursor-default group">
+        {/* CampusLink Brand Lockup — click to return to the TPO dashboard */}
+        <button
+          onClick={() => onSelectScreen(2)}
+          aria-label="Go to TPO dashboard"
+          className="flex items-center gap-2.5 cursor-pointer group text-left"
+          title="Go to TPO Dashboard"
+        >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-600/30 group-hover:scale-105 transition-transform shrink-0">
             <Building2 className="w-5 h-5 text-white" />
           </div>
@@ -145,7 +150,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
               Placement Workspace
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Institution Selector */}
         <div className={`hidden md:flex items-center pl-3 border-l ${isDark ? 'border-[#1E3A6B]' : 'border-[#D9E2F2]'}`} ref={collegeMenuRef}>
