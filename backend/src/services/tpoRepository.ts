@@ -1,0 +1,13 @@
+import { query } from '../config/db.js';
+
+export async function institution(){const r=await query(`SELECT COALESCE(MAX(college_name),'CampusLink College') AS name,count(*)::int AS active_students FROM students`);return {id:'campuslink',name:r.rows[0]?.name||'CampusLink College',activeStudents:r.rows[0]?.active_students||0};}
+export async function students(){const r=await query(`SELECT s.id,s.roll_number AS "rollNumber",s.full_name AS "fullName",s.branch,s.graduation_year AS "graduationYear",COALESCE(sa.cgpa,0) AS cgpa FROM students s LEFT JOIN LATERAL (SELECT cgpa FROM student_academics WHERE student_id=s.id ORDER BY updated_at DESC LIMIT 1) sa ON true ORDER BY s.full_name`);return r.rows;}
+export async function companies(){const r=await query('SELECT id,name,industry,website,description,locations,logo_url AS "logoUrl" FROM companies ORDER BY name');return r.rows;}
+export async function jobs(){const r=await query('SELECT j.*,c.name AS "companyName" FROM jobs j JOIN companies c ON c.id=j.company_id ORDER BY j.created_at DESC');return r.rows;}
+export async function applications(){const r=await query(`SELECT ra.*,s.full_name AS "studentName",j.title AS "jobTitle",c.name AS "companyName" FROM recruitment_applications ra JOIN students s ON s.id=ra.student_id JOIN jobs j ON j.id=ra.job_id JOIN companies c ON c.id=ra.company_id ORDER BY ra.applied_at DESC`);return r.rows;}
+export async function drives(){const r=await query('SELECT pd.*,c.name AS "companyName" FROM placement_drives pd JOIN companies c ON c.id=pd.company_id ORDER BY pd.created_at DESC');return r.rows;}
+export async function updateJob(id:string,status:string,notes?:string){const r=await query('UPDATE jobs SET status=$2 WHERE id=$1 RETURNING *',[id,status]);return r.rows[0]||null;}
+export async function updateStudentRisk(id:string,b:any){return (await query('SELECT id,full_name AS "fullName",branch FROM students WHERE id=$1',[id])).rows[0]||null;}
+export async function interviews(){return (await query('SELECT * FROM recruitment_interviews ORDER BY created_at DESC')).rows;}
+export async function offers(){return (await query('SELECT * FROM recruitment_offers ORDER BY created_at DESC')).rows;}
+export async function auditLogs(){return (await query('SELECT * FROM audit_logs ORDER BY created_at DESC')).rows;}
