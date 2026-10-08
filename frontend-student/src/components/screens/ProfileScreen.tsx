@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import {
@@ -30,6 +30,7 @@ export const ProfileScreen: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (student) {
@@ -94,13 +95,13 @@ export const ProfileScreen: React.FC = () => {
       <form onSubmit={handleSubmit} className="bg-white/85 dark:bg-[#070e22]/75 border border-blue-200/80 dark:border-blue-900/50 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl">
         {/* Avatar & Header */}
         <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-blue-100 dark:border-slate-800">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-blue-50 dark:bg-slate-800 border-2 border-blue-300 dark:border-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-blue-50 dark:bg-slate-800 border-2 border-blue-300 dark:border-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm"><input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>setFormData(x=>({...x,avatarUrl:String(r.result)}));r.readAsDataURL(f)}} />
             {formData.avatarUrl ? (
               <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <User className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             )}
-          </div>
+          <button type="button" onClick={()=>avatarInput.current?.click()} className="absolute bottom-0 right-0 px-1.5 py-1 bg-blue-600 text-white text-[9px] font-bold rounded-tl-lg">Change</button></div>
           <div className="flex-1 space-y-2 text-center sm:text-left">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">{student?.full_name}</h2>
@@ -152,7 +153,7 @@ export const ProfileScreen: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Profile Avatar Image URL</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Profile Avatar Image URL / Uploaded Photo</label>
               <input
                 type="url"
                 value={formData.avatarUrl}
