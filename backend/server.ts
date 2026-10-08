@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications } from './src/services/recruitmentRepository.js';
+import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications, studentOfferDecision } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
@@ -1040,36 +1040,22 @@ app.get('/api/student/offers', authenticateStudent, (req: AuthenticatedRequest, 
   res.json(data.offers);
 });
 
-app.post('/api/student/offers/:id/decision', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/offers/:id/decision', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const unified = await studentOfferDecision(req.user!.studentId, req.params.id, req.body?.decision);
+    if (!unified.error) return res.json({ message: `Offer marked as ${unified.offer.status}`, offer: unified.offer });
+    if (unified.error === 'OFFER_NOT_FOUND') return res.status(404).json({ error: 'Offer not found' });
+    if (unified.error === 'INVALID_DECISION') return res.status(400).json({ error: 'Decision must be ACCEPTED or DECLINED' });
+    if (unified.error === 'OFFER_ALREADY_DECIDED') return res.status(400).json({ error: `Offer already marked as ${unified.status}` });
+  } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const { decision } = req.body; // 'ACCEPTED' | 'DECLINED'
+  const { decision } = req.body;
   const offer = data.offers.find(o => o.id === req.params.id);
   if (!offer) return res.status(404).json({ error: 'Offer not found' });
-
-  if (decision === 'ACCEPTED') {
-    offer.status = 'ACCEPTED';
-    // If student accepts, update application state as well
-    const appRecord = data.applications.find(a => a.company_name === offer.company_name);
-    if (appRecord) appRecord.status = 'ACCEPTED';
-
-    data.notifications.unshift({
-      id: `notif-${Date.now()}`,
-      student_id: data.student.id,
-      title: `Offer Accepted: ${offer.company_name}!`,
-      message: `Congratulations! You accepted the placement offer of ${offer.ctc}. Please upload pre-joining verification documents.`,
-      category: 'document',
-      is_read: false,
-      action_route: 'documents',
-      created_at: new Date().toISOString()
-    });
-  } else if (decision === 'DECLINED') {
-    offer.status = 'DECLINED';
-    const appRecord = data.applications.find(a => a.company_name === offer.company_name);
-    if (appRecord) appRecord.status = 'DECLINED';
-  }
-
+  if (decision === 'ACCEPTED') { offer.status = 'ACCEPTED'; }
+  else if (decision === 'DECLINED') { offer.status = 'DECLINED'; }
+  else return res.status(400).json({ error: 'Decision must be ACCEPTED or DECLINED' });
   offer.updated_at = new Date().toISOString();
   res.json({ message: `Offer marked as ${offer.status}`, offer });
 });
