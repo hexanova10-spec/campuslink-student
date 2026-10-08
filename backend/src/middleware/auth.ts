@@ -1,4 +1,7 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 import type { NextFunction, Request, Response } from 'express';
 
 export type CampusRole = 'STUDENT' | 'RECRUITER' | 'TPO';
