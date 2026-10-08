@@ -24,7 +24,7 @@ export async function listJobs(companyId:string) {
 }
 export async function createJob(companyId:string,b:any) {
   const r=await query(`INSERT INTO jobs (id,company_id,title,department,description,responsibilities,required_skills,preferred_skills,min_cgpa,eligible_branches,graduation_year,max_backlogs_allowed,experience_level,required_certifications,ctc_min_lpa,ctc_max_lpa,ctc_breakdown,location,work_mode,openings,deadline,status)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,'ACTIVE') RETURNING *`,
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,'PENDING_TPO_REVIEW') RETURNING *`,
     [b.id||`job-${Date.now()}`,companyId,b.title,b.department,b.description,b.responsibilities||[],b.requiredSkills||b.required_skills||[],b.preferredSkills||b.preferred_skills||[],b.minCgpa||null,b.eligibleBranches||b.eligible_branches||[],b.graduationYear||null,b.maxBacklogsAllowed||0,b.experienceLevel||'Fresher',b.requiredCertifications||[],b.ctcMinLpa||null,b.ctcMaxLpa||null,b.ctcBreakdown||null,b.location||null,b.workMode||null,b.openings||1,b.deadline||null]);
   return r.rows[0];
 }
