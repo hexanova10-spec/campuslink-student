@@ -12,3 +12,5 @@ export async function updateStudentRisk(id:string,b:any){return (await query('SE
 export async function interviews(){return (await query('SELECT * FROM recruitment_interviews ORDER BY created_at DESC')).rows;}
 export async function offers(){return (await query(`SELECT ro.*,s.full_name AS "studentName",c.name AS "companyName",j.title AS "jobTitle",ra.status AS "applicationStatus" FROM recruitment_offers ro JOIN students s ON s.id=ro.student_id JOIN companies c ON c.id=ro.company_id LEFT JOIN jobs j ON j.id=ro.job_id LEFT JOIN recruitment_applications ra ON ra.id=ro.application_id ORDER BY ro.created_at DESC`)).rows;}
 export async function auditLogs(){return (await query('SELECT * FROM audit_logs ORDER BY created_at DESC')).rows;}
+
+export async function documents(){return (await query(`SELECT d.id,d.student_id AS "studentId",s.full_name AS "studentName",s.roll_number AS "rollNumber",d.title,d.document_type AS "documentType",d.file_url AS "fileUrl",d.verification_status AS status,d.uploaded_at AS "uploadedAt",d.rejection_notes AS "rejectionReason" FROM documents d JOIN students s ON s.id=d.student_id ORDER BY d.uploaded_at DESC`)).rows;}
