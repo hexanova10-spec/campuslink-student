@@ -529,7 +529,7 @@ class RepositoryService {
     return this.state.documents;
   }
 
-  public verifyDocument(docId: string, status: VerificationStatus, reason?: string) {
+  public async verifyDocument(docId: string, status: VerificationStatus, reason?: string) {
     const user = this.getCurrentUser();
     const doc = this.state.documents.find(d => d.id === docId);
     if (doc) {
@@ -538,6 +538,12 @@ class RepositoryService {
       doc.verifiedAt = new Date().toISOString();
       doc.rejectionReason = reason;
 
+      try {
+        await tpoFetch(`/api/tpo/documents/${docId}/verify`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,reason})});
+      } catch (error) {
+        console.error('Document verification sync failed', error);
+        return;
+      }
       this.logAudit({
         action: 'DOCUMENT_VERIFICATION',
         resourceType: 'Document',
