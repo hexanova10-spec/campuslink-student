@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { createStudentApplication, listStudentApplications, withdrawStudentApplication, studentInterviews, studentOffers, studentNotifications, studentOfferDecision, markStudentNotificationRead } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
+import { query } from './src/config/db.js';
 import {
   parseResumeWithGemini,
   generateInterviewQuestion,
@@ -22,6 +23,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026';
+async function ensureUnifiedStudent(studentData: any) {
+  const s=studentData.student,u=studentData.user;
+  const ur=await query('SELECT id FROM users WHERE email=$1 LIMIT 1',[u.email]);
+  let userId=ur.rows[0]?.id;
+  if(!userId) userId=(await query("INSERT INTO users (email,password_hash,role) VALUES ($1,$2,'student') RETURNING id",[u.email,u.password_hash||''])).rows[0].id;
+  const sr=await query('SELECT id FROM students WHERE user_id=$1 LIMIT 1',[userId]);
+  if(sr.rows[0]){await query('UPDATE students SET full_name=$2,mobile=$3,college_name=$4,branch=$5,degree=$6,graduation_year=$7,current_semester=$8,avatar_url=$9,bio=$10,target_role=$11,preferred_locations=$12,onboarding_completed=$13,updated_at=CURRENT_TIMESTAMP WHERE user_id=$1',[userId,s.full_name,s.mobile,s.college_name,s.branch,s.degree,s.graduation_year,s.current_semester,s.avatar_url||null,s.bio||null,s.target_role||null,s.preferred_locations||[],Boolean(s.onboarding_completed)]);return sr.rows[0].id;}
+  return (await query('INSERT INTO students (user_id,roll_number,full_name,mobile,college_name,branch,degree,graduation_year,current_semester,avatar_url,bio,target_role,preferred_locations,onboarding_completed) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id',[userId,s.roll_number||null,s.full_name,s.mobile||'',s.college_name||'',s.branch||'',s.degree||'B.Tech',s.graduation_year||2026,s.current_semester||8,s.avatar_url||null,s.bio||null,s.target_role||null,s.preferred_locations||[],Boolean(s.onboarding_completed)])).rows[0].id;
+}
+async function unifiedStudentById(studentId:string){return (await query('SELECT s.*,u.email FROM students s JOIN users u ON u.id=s.user_id WHERE s.id=$1',[studentId])).rows[0]||null;}
+
 
 app.use(express.json({ limit: '15mb' }));
 
@@ -81,10 +93,11 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
       graduationYear: Number(graduationYear) || 2026
     });
 
+    const unifiedStudentId = await ensureUnifiedStudent(studentData);
     const token = jwt.sign(
       {
         userId: studentData.user.id,
-        studentId: studentData.student.id,
+        studentId: unifiedStudentId,
         email: studentData.user.email
       },
       JWT_SECRET,
@@ -120,10 +133,11 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Student profile not found for this account' });
   }
 
+  const unifiedStudentId = await ensureUnifiedStudent(studentData);
   const token = jwt.sign(
     {
       userId: user.id,
-      studentId: studentData.student.id,
+      studentId: unifiedStudentId,
       email: user.email
     },
     JWT_SECRET,
@@ -163,16 +177,10 @@ app.post('/api/auth/reset-password', (req: Request, res: Response) => {
 });
 
 // Current Authenticated User & Student Check
-app.get('/api/auth/me', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const studentData = mockDb.getStudentById(req.user!.studentId);
-  if (!studentData) {
-    return res.status(404).json({ error: 'Student record not found' });
-  }
-  res.json({
-    user: { id: studentData.user.id, email: studentData.user.email },
-    student: studentData.student,
-    onboardingCompleted: studentData.student.onboarding_completed
-  });
+app.get('/api/auth/me', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student record not found'});
+  const student={id:s.id,user_id:s.user_id,roll_number:s.roll_number,full_name:s.full_name,mobile:s.mobile,college_name:s.college_name,branch:s.branch,degree:s.degree,graduation_year:s.graduation_year,current_semester:s.current_semester,avatar_url:s.avatar_url,bio:s.bio,target_role:s.target_role,preferred_locations:s.preferred_locations,onboarding_completed:s.onboarding_completed,updated_at:s.updated_at};
+  res.json({user:{id:s.user_id,email:s.email},student,onboardingCompleted:Boolean(s.onboarding_completed)});
 });
 
 // ---------------------------------------------------------
@@ -377,47 +385,16 @@ app.get('/api/student/dashboard', authenticateStudent, (req: AuthenticatedReques
 // ---------------------------------------------------------
 // 4. STUDENT PROFILE & EDITING
 // ---------------------------------------------------------
-app.get('/api/student/profile', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-  res.json({
-    student: data.student,
-    academics: data.academics,
-    skills: data.skills,
-    projects: data.projects,
-    experiences: data.experiences,
-    certifications: data.certifications,
-    resume: data.resume
-  });
+app.get('/api/student/profile', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student not found'});
+  const [a,skills,projects,experiences,certifications,resume]=await Promise.all([query('SELECT * FROM student_academics WHERE student_id=$1 ORDER BY updated_at DESC LIMIT 1',[s.id]),query('SELECT * FROM student_skills WHERE student_id=$1 ORDER BY created_at',[s.id]),query('SELECT * FROM projects WHERE student_id=$1 ORDER BY created_at DESC',[s.id]),query('SELECT * FROM experiences WHERE student_id=$1 ORDER BY start_date DESC',[s.id]),query('SELECT * FROM certifications WHERE student_id=$1 ORDER BY issue_date DESC',[s.id]),query('SELECT * FROM resumes WHERE student_id=$1 AND is_primary=true ORDER BY updated_at DESC LIMIT 1',[s.id])]);
+  res.json({student:s,academics:a.rows[0]||null,skills:skills.rows,projects:projects.rows,experiences:experiences.rows,certifications:certifications.rows,resume:resume.rows[0]||null});
 });
-
-app.put('/api/student/profile', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const { fullName, mobile, bio, targetRole, preferredLocations, rollNumber, avatarUrl } = req.body;
-  if (fullName) data.student.full_name = fullName;
-  if (mobile) data.student.mobile = mobile;
-  if (bio !== undefined) data.student.bio = bio;
-  if (rollNumber) data.student.roll_number = rollNumber;
-  if (avatarUrl) data.student.avatar_url = avatarUrl;
-  if (preferredLocations) data.student.preferred_locations = preferredLocations;
-
-  if (targetRole && targetRole !== data.student.target_role) {
-    data.student.target_role = targetRole;
-    mockDb.recalculateSkillGap(data.student.id, targetRole);
-  }
-
-  data.student.updated_at = new Date().toISOString();
-  mockDb.recalculateReadiness(data.student.id);
-
-  res.json({
-    message: 'Profile updated successfully',
-    student: data.student,
-    readinessScore: data.readinessScore
-  });
+app.put('/api/student/profile', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student not found'}); const b=req.body||{};
+  await query('UPDATE students SET full_name=COALESCE($2,full_name),mobile=COALESCE($3,mobile),bio=COALESCE($4,bio),target_role=COALESCE($5,target_role),preferred_locations=COALESCE($6,preferred_locations),roll_number=COALESCE($7,roll_number),avatar_url=COALESCE($8,avatar_url),updated_at=CURRENT_TIMESTAMP WHERE id=$1',[s.id,b.fullName,b.mobile,b.bio,b.targetRole,b.preferredLocations,b.rollNumber,b.avatarUrl]);
+  res.json({message:'Profile updated successfully',student:await unifiedStudentById(s.id),readinessScore:null});
 });
-
 // ---------------------------------------------------------
 // 5. ACADEMIC PROFILE
 // ---------------------------------------------------------
@@ -712,82 +689,20 @@ app.post('/api/student/skill-gap/target-role', authenticateStudent, (req: Authen
 // ---------------------------------------------------------
 // 13 & 14. RECOMMENDED JOBS & DETAILS
 // ---------------------------------------------------------
-app.get('/api/student/jobs', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const studentSkillNames = new Set(data.skills.map(s => s.skill_name.toLowerCase()));
-
-  const list = MASTER_JOBS.map(job => {
-    const requiredTotal = job.required_skills.length;
-    let matchedCount = 0;
-    const missingSkills: string[] = [];
-
-    job.required_skills.forEach(skill => {
-      if (studentSkillNames.has(skill.toLowerCase())) {
-        matchedCount++;
-      } else {
-        missingSkills.push(skill);
-      }
-    });
-
-    const isCgpaEligible = data.academics.cgpa >= job.min_cgpa;
-    const isBacklogEligible = data.academics.active_backlogs <= job.max_backlogs;
-    const isBranchEligible = job.allowed_branches.includes(data.student.branch);
-    const isEligible = isCgpaEligible && isBacklogEligible && isBranchEligible;
-
-    const skillRatio = (matchedCount / Math.max(1, requiredTotal)) * 100;
-    const matchPercentage = Math.round(isEligible ? Math.min(99, skillRatio * 0.9 + (data.academics.cgpa / 10) * 10) : skillRatio * 0.6);
-
-    const userApp = data.applications.find(a => a.job_id === job.id);
-
-    return {
-      ...job,
-      matchPercentage,
-      isEligible,
-      isApplied: !!userApp,
-      applicationStatus: userApp ? userApp.status : null,
-      matchedSkillsCount: matchedCount,
-      missingSkills,
-      eligibilityReasons: {
-        cgpa: { eligible: isCgpaEligible, required: job.min_cgpa, actual: data.academics.cgpa },
-        backlogs: { eligible: isBacklogEligible, max: job.max_backlogs, actual: data.academics.active_backlogs },
-        branch: { eligible: isBranchEligible, allowed: job.allowed_branches, actual: data.student.branch }
-      }
-    };
-  }).sort((a, b) => b.matchPercentage - a.matchPercentage);
-
-  res.json(list);
+app.get('/api/student/jobs', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student not found'});
+  const skills=new Set((await query('SELECT LOWER(skill_name) AS skill_name FROM student_skills WHERE student_id=$1',[s.id])).rows.map((x:any)=>x.skill_name));
+  const jobs=(await query("SELECT j.*,c.name AS company_name FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.status='ACTIVE' AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE) ORDER BY j.created_at DESC")).rows;
+  const apps=(await query('SELECT job_id,status FROM recruitment_applications WHERE student_id=$1',[s.id])).rows; const appMap=new Map(apps.map((a:any)=>[a.job_id,a]));
+  const academic=(await query('SELECT cgpa,active_backlogs FROM student_academics WHERE student_id=$1 ORDER BY updated_at DESC LIMIT 1',[s.id])).rows[0]||{cgpa:0,active_backlogs:0};
+  res.json(jobs.map((j:any)=>{const reqSkills=j.required_skills||[],matched=reqSkills.filter((x:string)=>skills.has(x.toLowerCase())),app=appMap.get(j.id);const eligible=Number(academic.cgpa)>=Number(j.min_cgpa||0)&&Number(academic.active_backlogs)<=Number(j.max_backlogs_allowed||0)&&(!j.eligible_branches?.length||j.eligible_branches.includes(s.branch))&&(!j.graduation_year||Number(j.graduation_year)===Number(s.graduation_year));return {...j,companyName:j.company_name,role_title:j.title,company_name:j.company_name,ctc:j.ctc_max_lpa?((j.ctc_min_lpa||j.ctc_max_lpa)+'-'+j.ctc_max_lpa+' LPA'):'',allowed_branches:j.eligible_branches||[],required_skills:reqSkills,min_cgpa:Number(j.min_cgpa||0),max_backlogs:Number(j.max_backlogs_allowed||0),matchPercentage:Math.round((matched.length/Math.max(1,reqSkills.length))*100),isEligible:eligible,isApplied:Boolean(app),applicationStatus:app?.status||null};}));
 });
-
-app.get('/api/student/jobs/:id', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const job = MASTER_JOBS.find(j => j.id === req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job drive not found' });
-
-  const studentSkillNames = new Set(data.skills.map(s => s.skill_name.toLowerCase()));
-  const missingSkills = job.required_skills.filter(s => !studentSkillNames.has(s.toLowerCase()));
-  const matchedSkills = job.required_skills.filter(s => studentSkillNames.has(s.toLowerCase()));
-
-  const isCgpaEligible = data.academics.cgpa >= job.min_cgpa;
-  const isBacklogEligible = data.academics.active_backlogs <= job.max_backlogs;
-  const isBranchEligible = job.allowed_branches.includes(data.student.branch);
-  const isEligible = isCgpaEligible && isBacklogEligible && isBranchEligible;
-
-  const appRecord = data.applications.find(a => a.job_id === job.id);
-
-  res.json({
-    ...job,
-    matchedSkills,
-    missingSkills,
-    isEligible,
-    isApplied: !!appRecord,
-    application: appRecord || null
-  });
+app.get('/api/student/jobs/:id', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student not found'});
+  const j=(await query("SELECT j.*,c.name AS company_name FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id=$1 AND j.status='ACTIVE'",[req.params.id])).rows[0]; if(!j)return res.status(404).json({error:'Job drive not found'});
+  const skills=new Set((await query('SELECT LOWER(skill_name) AS skill_name FROM student_skills WHERE student_id=$1',[s.id])).rows.map((x:any)=>x.skill_name));const reqSkills=j.required_skills||[],matchedSkills=reqSkills.filter((x:string)=>skills.has(x.toLowerCase())),missingSkills=reqSkills.filter((x:string)=>!skills.has(x.toLowerCase()));const application=(await query('SELECT * FROM recruitment_applications WHERE student_id=$1 AND job_id=$2 LIMIT 1',[s.id,j.id])).rows[0]||null;
+  res.json({...j,companyName:j.company_name,role_title:j.title,matchedSkills,missingSkills,isApplied:Boolean(application),application});
 });
-
 // AI Job Description Analysis Endpoint
 // Authenticates student from JWT, retrieves student profile & selected job, evaluates with Gemini
 app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
