@@ -23,7 +23,6 @@ if (process.env.NODE_ENV !== 'production') {
     res.json({ token, tpoId, institutionId });
   });
 
-if (process.env.NODE_ENV !== 'production') {
   app.post('/api/recruiter/auth/dev-session', (req, res) => {
     const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
     const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
