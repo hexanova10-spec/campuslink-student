@@ -27,7 +27,7 @@ if (process.env.NODE_ENV !== 'production') {
     const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
     const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
     const token = jwt.sign(
-      { userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, role: 'RECRUITER' },
+      { userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, name: 'Rajashree Sahoo', role: 'RECRUITER' },
       process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026',
       { expiresIn: '8h' }
     );
