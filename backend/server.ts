@@ -316,8 +316,13 @@ app.post('/api/student/onboarding', authenticateStudent, (req: AuthenticatedRequ
 // ---------------------------------------------------------
 // 3. STUDENT DASHBOARD COMMAND CENTER
 // ---------------------------------------------------------
-app.get('/api/student/dashboard', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+app.get('/api/student/dashboard', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  // The JWT carries the unified PostgreSQL student UUID. The legacy dashboard data is keyed by the mock user/student IDs, so resolve the legacy record by email first.
+  let data = mockDb.getStudentById(req.user!.studentId);
+  if (!data && req.user?.email) {
+    const legacyUser = mockDb.getUserByEmail(req.user.email);
+    if (legacyUser) data = mockDb.getStudentByUserId(legacyUser.id);
+  }
   if (!data) return res.status(404).json({ error: 'Student record not found' });
 
   // Calculate profile completion percentage
