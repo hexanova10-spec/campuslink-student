@@ -1,0 +1,9 @@
+[submodule "frontend-student"]
+	path = frontend-student
+	url = https://github.com/hexanova10-spec/campuslink-student.git
+[submodule "frontend-recruiter"]
+	path = frontend-recruiter
+	url = https://github.com/hexanova10-spec/campuslink-recruiter.git
+[submodule "frontend-tpo"]
+	path = frontend-tpo
+	url = https://github.com/hexanova10-spec/campuslink-tpo.git
