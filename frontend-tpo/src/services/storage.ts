@@ -8,7 +8,19 @@ async function tpoFetch(path: string, init: RequestInit = {}) {
     const data = await session.json(); token = data.token; localStorage.setItem(TPO_TOKEN_KEY, token);
   }
   const headers = new Headers(init.headers || {}); headers.set('Authorization', `Bearer ${token}`);
-  const res = await fetch(path, {...init,headers}); if (!res.ok) throw new Error(`TPO API ${res.status}: ${path}`); return res;
+  let res = await fetch(path, {...init,headers});
+  if (res.status === 401) {
+    localStorage.removeItem(TPO_TOKEN_KEY);
+    const session = await fetch('/api/tpo/auth/dev-session', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({tpoId:'user-tpo-apex',institutionId:'campuslink'}) });
+    if (!session.ok) throw new Error(`TPO session bootstrap failed: ${session.status}`);
+    const data = await session.json();
+    token = data.token;
+    localStorage.setItem(TPO_TOKEN_KEY, token);
+    headers.set('Authorization', `Bearer ${token}`);
+    res = await fetch(path, {...init,headers});
+  }
+  if (!res.ok) throw new Error(`TPO API ${res.status}: ${path}`);
+  return res;
 }
 
 import {
@@ -285,14 +297,10 @@ class RepositoryService {
 
   // 2. JOBS & REVIEWS
   public getJobs(): Job[] {
-    const user = this.getCurrentUser();
-    if (user.role === 'COLLEGE_TPO') {
-      return this.state.jobs.filter(j => j.collegeId === user.institutionId);
-    }
-    if (this.state.selectedCollegeIdFilter) {
-      return this.state.jobs.filter(j => j.collegeId === this.state.selectedCollegeIdFilter);
-    }
-    return this.state.jobs;
+    // /api/tpo/jobs is already scoped by the authenticated TPO session.
+    // Do not re-filter hydrated backend jobs against legacy demo institution IDs.
+    if (this.state.jobs.length) return this.state.jobs;
+    return [];
   }
 
   public async updateJobStatus(jobId: string, status: JobStatus, notes?: string) {
