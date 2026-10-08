@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- CampusLink shared recruitment/TPO domain.
 -- This is additive to the existing student schema and is safe to apply after it.
 
