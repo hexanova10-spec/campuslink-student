@@ -1,6 +1,8 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
+import path from 'path';
 
+dotenv.config({ path: path.resolve(process.cwd(), 'backend/.env') });
 dotenv.config();
 
 const { Pool } = pg;
