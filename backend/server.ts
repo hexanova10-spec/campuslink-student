@@ -138,7 +138,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Student profile not found for this account' });
   }
 
-  const unifiedStudentId = await ensureUnifiedStudent(studentData);
+  // Keep demo/local authentication usable even when PostgreSQL is not configured yet.
+  // When the shared database is available, use the unified student id so all modules share one record.
+  let unifiedStudentId = studentData.student.id;
+  try {
+    unifiedStudentId = await ensureUnifiedStudent(studentData);
+  } catch (dbError) {
+    console.warn('[CampusLink DB] Student login sync skipped:', dbError instanceof Error ? dbError.message : dbError);
+  }
+
   const token = jwt.sign(
     {
       userId: user.id,
