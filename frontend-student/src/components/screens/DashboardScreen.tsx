@@ -28,13 +28,17 @@ export const DashboardScreen: React.FC = () => {
   const { student, setCurrentScreen, setSelectedJobId } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchDashboard = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await api.getDashboard();
       setData(res);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load dashboard:', err);
+      setError(err?.message || 'Unable to load your placement dashboard.');
     } finally {
       setLoading(false);
     }
@@ -44,12 +48,25 @@ export const DashboardScreen: React.FC = () => {
     fetchDashboard();
   }, []);
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs text-slate-500 dark:text-slate-400">Loading your placement command center...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-white/80 dark:bg-[#070e22]/80 p-6 text-center shadow-xl">
+          <AlertTriangle className="w-8 h-8 mx-auto text-rose-500 mb-3" />
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Dashboard could not be loaded</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{error || 'The backend returned no dashboard data.'}</p>
+          <button onClick={fetchDashboard} className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Retry</button>
         </div>
       </div>
     );
