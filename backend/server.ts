@@ -33,6 +33,7 @@ async function ensureUnifiedStudent(studentData: any) {
   return (await query('INSERT INTO students (user_id,roll_number,full_name,mobile,college_name,branch,degree,graduation_year,current_semester,avatar_url,bio,target_role,preferred_locations,onboarding_completed) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id',[userId,s.roll_number||null,s.full_name,s.mobile||'',s.college_name||'',s.branch||'',s.degree||'B.Tech',s.graduation_year||2026,s.current_semester||8,s.avatar_url||null,s.bio||null,s.target_role||null,s.preferred_locations||[],Boolean(s.onboarding_completed)])).rows[0].id;
 }
 async function unifiedStudentById(studentId:string){return (await query('SELECT s.*,u.email FROM students s JOIN users u ON u.id=s.user_id WHERE s.id=$1',[studentId])).rows[0]||null;}
+async function unifiedStudentByEmail(email:string){return (await query('SELECT s.*,u.email FROM students s JOIN users u ON u.id=s.user_id WHERE u.email=$1',[email])).rows[0]||null;}
 
 
 app.use(express.json({ limit: '15mb' }));
@@ -97,7 +98,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         userId: studentData.user.id,
-        studentId: unifiedStudentId,
+        studentId: studentData.student.id,
         email: studentData.user.email
       },
       JWT_SECRET,
@@ -178,7 +179,7 @@ app.post('/api/auth/reset-password', (req: Request, res: Response) => {
 
 // Current Authenticated User & Student Check
 app.get('/api/auth/me', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student record not found'});
+  const s=await unifiedStudentByEmail(req.user!.email); if(!s)return res.status(404).json({error:'Student record not found'});
   const student={id:s.id,user_id:s.user_id,roll_number:s.roll_number,full_name:s.full_name,mobile:s.mobile,college_name:s.college_name,branch:s.branch,degree:s.degree,graduation_year:s.graduation_year,current_semester:s.current_semester,avatar_url:s.avatar_url,bio:s.bio,target_role:s.target_role,preferred_locations:s.preferred_locations,onboarding_completed:s.onboarding_completed,updated_at:s.updated_at};
   res.json({user:{id:s.user_id,email:s.email},student,onboardingCompleted:Boolean(s.onboarding_completed)});
 });
@@ -733,14 +734,14 @@ app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: Au
 // 15 & 16. APPLICATIONS & EXPLAINABLE REJECTION
 // ---------------------------------------------------------
 app.get('/api/student/applications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  try { const unified = await listStudentApplications(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
+  try { const unified = await listStudentApplications((await unifiedStudentByEmail(req.user!.email))?.id || ''); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.applications);
 });
 
 app.post('/api/student/applications/apply', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  try { const unified = await createStudentApplication(req.user!.studentId, req.body.jobId); if (!unified.error) { const j:any = unified.job; return res.status(201).json({ message: 'Application submitted successfully', application: { ...unified.application, company_name: j.company_name, role_title: j.title, ctc: j.ctc_max_lpa ? ((j.ctc_min_lpa || j.ctc_max_lpa) + '-' + j.ctc_max_lpa + ' LPA') : '', location: j.location || '', allow_withdrawal: true } }); } if (unified.error === 'ALREADY_APPLIED') return res.status(400).json({ error: 'You have already applied for this placement drive' }); if (unified.error === 'JOB_NOT_FOUND') return res.status(404).json({ error: 'Job drive not found' }); if (unified.error === 'INELIGIBLE_CGPA' || unified.error === 'INELIGIBLE_BACKLOGS' || unified.error === 'INELIGIBLE_BRANCH' || unified.error === 'INELIGIBLE_GRADUATION_YEAR') return res.status(400).json({ error: unified.error }); } catch {}
+  try { const unified = await createStudentApplication((await unifiedStudentByEmail(req.user!.email))?.id || '', req.body.jobId); if (!unified.error) { const j:any = unified.job; return res.status(201).json({ message: 'Application submitted successfully', application: { ...unified.application, company_name: j.company_name, role_title: j.title, ctc: j.ctc_max_lpa ? ((j.ctc_min_lpa || j.ctc_max_lpa) + '-' + j.ctc_max_lpa + ' LPA') : '', location: j.location || '', allow_withdrawal: true } }); } if (unified.error === 'ALREADY_APPLIED') return res.status(400).json({ error: 'You have already applied for this placement drive' }); if (unified.error === 'JOB_NOT_FOUND') return res.status(404).json({ error: 'Job drive not found' }); if (unified.error === 'INELIGIBLE_CGPA' || unified.error === 'INELIGIBLE_BACKLOGS' || unified.error === 'INELIGIBLE_BRANCH' || unified.error === 'INELIGIBLE_GRADUATION_YEAR') return res.status(400).json({ error: unified.error }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
@@ -785,7 +786,7 @@ app.post('/api/student/applications/apply', authenticateStudent, async (req: Aut
 });
 
 app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  try { const unified = await withdrawStudentApplication(req.user!.studentId, req.params.id); if (unified) return res.json({ message: 'Application successfully withdrawn' }); } catch {}
+  try { const unified = await withdrawStudentApplication((await unifiedStudentByEmail(req.user!.email))?.id || '', req.params.id); if (unified) return res.json({ message: 'Application successfully withdrawn' }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
@@ -801,9 +802,9 @@ app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (r
   res.json({ message: 'Application successfully withdrawn' });
 });
 
-app.get('/api/student/unified/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentInterviews(req.user!.studentId)); } catch { return res.json([]); } });
-app.get('/api/student/unified/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentOffers(req.user!.studentId)); } catch { return res.json([]); } });
-app.get('/api/student/unified/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentNotifications(req.user!.studentId)); } catch { return res.json([]); } });
+app.get('/api/student/unified/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentInterviews((await unifiedStudentByEmail(req.user!.email))?.id || '')); } catch { return res.json([]); } });
+app.get('/api/student/unified/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentOffers((await unifiedStudentByEmail(req.user!.email))?.id || '')); } catch { return res.json([]); } });
+app.get('/api/student/unified/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => { try { return res.json(await studentNotifications((await unifiedStudentByEmail(req.user!.email))?.id || '')); } catch { return res.json([]); } });
 
 // ---------------------------------------------------------
 // 17. INTERVIEW SCHEDULE
@@ -1026,7 +1027,7 @@ app.get('/api/student/notifications', authenticateStudent, async (req: Authentic
 });
 
 app.post('/api/student/notifications/:id/read', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  try { const unified = await markStudentNotificationRead(req.user!.studentId, req.params.id); if (unified) return res.json({ message: 'Marked as read', notification: unified }); } catch {}
+  try { const unified = await markStudentNotificationRead((await unifiedStudentByEmail(req.user!.email))?.id || '', req.params.id); if (unified) return res.json({ message: 'Marked as read', notification: unified }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   const notif = data.notifications.find(n => n.id === req.params.id);
