@@ -1201,8 +1201,4 @@ app.get('/api/health', (_req: Request, res: Response) => {
   });
 });
 
-// API-only process. The three Vite frontends run independently on
-// ports 3001/3002/3003 and proxy /api requests to this service.
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log('[CampusLink Backend] API active on port ' + PORT);
-});
+export { app };
