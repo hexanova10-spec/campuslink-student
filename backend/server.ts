@@ -817,13 +817,15 @@ app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: Au
 // ---------------------------------------------------------
 // 15 & 16. APPLICATIONS & EXPLAINABLE REJECTION
 // ---------------------------------------------------------
-app.get('/api/student/applications', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/student/applications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await listStudentApplications(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.applications);
 });
 
-app.post('/api/student/applications/apply', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/applications/apply', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await createStudentApplication(req.user!.studentId, req.body.jobId); if (!unified.error) return res.status(201).json({ message: 'Application submitted successfully', application: unified.application }); if (unified.error === 'ALREADY_APPLIED') return res.status(400).json({ error: 'You have already applied for this placement drive' }); if (unified.error === 'JOB_NOT_FOUND') return res.status(404).json({ error: 'Job drive not found' }); if (unified.error === 'INELIGIBLE_CGPA' || unified.error === 'INELIGIBLE_BACKLOGS' || unified.error === 'INELIGIBLE_BRANCH' || unified.error === 'INELIGIBLE_GRADUATION_YEAR') return res.status(400).json({ error: unified.error }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
@@ -867,7 +869,8 @@ app.post('/api/student/applications/apply', authenticateStudent, (req: Authentic
   res.status(201).json({ message: 'Application submitted successfully', application: newApp });
 });
 
-app.post('/api/student/applications/:id/withdraw', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try { const unified = await withdrawStudentApplication(req.user!.studentId, req.params.id); if (unified) return res.json({ message: 'Application successfully withdrawn' }); } catch {}
   const data = mockDb.getStudentById(req.user!.studentId);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
