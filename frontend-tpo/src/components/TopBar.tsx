@@ -39,6 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
   const roleMenuRef = useRef<HTMLDivElement>(null);
   const collegeMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -74,6 +75,15 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
   };
 
   const isDark = theme === 'dark';
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try { await repo.updateTpoProfile({ avatarUrl: String(reader.result) }); } catch (error) { console.error('TPO avatar upload failed', error); }
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <header
@@ -434,9 +444,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
                 : 'bg-[#FFFFFF] hover:bg-[#F8FAFF] border-[#D9E2F2] text-[#101A3A]'
             }`}
           >
-            <div className="w-7 h-7 rounded-lg bg-[#3155E7] text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0 text-white-force">
-              {currentUser.name.charAt(0)}
-            </div>
+            <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            <button type="button" onClick={(e) => { e.stopPropagation(); avatarInput.current?.click(); }} className="w-7 h-7 rounded-lg overflow-hidden bg-[#3155E7] text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0 text-white-force">
+              {currentUser.avatar ? <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
+            </button>
             <div className="text-left hidden lg:block">
               <div className="font-bold text-[11px] leading-tight truncate max-w-[110px]">
                 {currentUser.name}
@@ -470,10 +481,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
                   }`}
                 >
                   <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center font-bold text-xs text-[#3155E7]">
-                    RN
+                    MD
                   </div>
                   <div>
-                    <div className="font-bold">Dr. Rajesh Nair</div>
+                    <div className="font-bold">Mrutyunjya Dash</div>
                     <div className="text-[10px] opacity-80">COLLEGE TPO • Apex Inst of Tech</div>
                   </div>
                 </button>
@@ -487,10 +498,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
                   }`}
                 >
                   <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center font-bold text-xs text-[#3155E7]">
-                    SK
+                    SP
                   </div>
                   <div>
-                    <div className="font-bold">Dr. Sunita Kulkarni</div>
+                    <div className="font-bold">Sisira Kanta Padhi</div>
                     <div className="text-[10px] opacity-80">COLLEGE TPO • Metro Univ BLR</div>
                   </div>
                 </button>
@@ -504,10 +515,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
                   }`}
                 >
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center font-bold text-xs text-[#10B981]">
-                    SV
+                    RM
                   </div>
                   <div>
-                    <div className="font-bold">Samantha Vance</div>
+                    <div className="font-bold">Ronali Mohanty</div>
                     <div className="text-[10px] opacity-80">SYSTEM ADMIN • Multi-Tenant Global</div>
                   </div>
                 </button>
