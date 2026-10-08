@@ -130,11 +130,11 @@ class RepositoryService {
 
   private async hydrateFromBackend() {
     try {
-      const [students, companies, jobs, applications, drives, interviews, offers, logs, documents] = await Promise.all([
+      const [students, companies, jobs, applications, drives, interviews, offers, logs, documents, profile] = await Promise.all([
         tpoFetch('/api/tpo/students').then(r=>r.json()), tpoFetch('/api/tpo/companies').then(r=>r.json()),
         tpoFetch('/api/tpo/jobs').then(r=>r.json()), tpoFetch('/api/tpo/applications').then(r=>r.json()),
         tpoFetch('/api/tpo/drives').then(r=>r.json()), tpoFetch('/api/tpo/interviews').then(r=>r.json()),
-        tpoFetch('/api/tpo/offers').then(r=>r.json()), tpoFetch('/api/tpo/audit-logs').then(r=>r.json()), tpoFetch('/api/tpo/documents').then(r=>r.json())
+        tpoFetch('/api/tpo/offers').then(r=>r.json()), tpoFetch('/api/tpo/audit-logs').then(r=>r.json()), tpoFetch('/api/tpo/documents').then(r=>r.json()), tpoFetch('/api/tpo/profile').then(r=>r.json())
       ]);
       const collegeId='inst-apex-01';
       this.state.students=(students.students||[]).map((s:any)=>({id:s.id,collegeId,campusId:collegeId,rollNumber:s.rollNumber||'',fullName:s.fullName||'',email:s.email||'',phone:s.phone||'',gender:s.gender||'OTHER',department:s.branch||'',branch:s.branch||'',graduationYear:s.graduationYear||0,cgpa:Number(s.cgpa||0),tenthPercentage:0,twelfthPercentage:0,activeBacklogs:0,historyOfBacklogs:0,readinessLevel:'PLACEMENT_READY',placementStatus:'UNPLACED',primarySkills:[],secondarySkills:[],certifications:[],isFlaggedAtRisk:false,riskScore:0,totalApplications:0,totalRejections:0,totalInterviews:0,profileCompletion:0,resumeVerified:false,placementWillingness:true,optedDreamJob:false} as Student));
@@ -145,6 +145,9 @@ class RepositoryService {
       this.state.interviews=(interviews.interviews||[]).map((i:any)=>({id:i.id,collegeId,driveId:'',jobId:i.job_id||'',studentId:i.student_id||'',roundNumber:i.round_number||1,roundName:i.round_name||'Interview',scheduledTime:i.scheduled_time||'',venueOrRoom:i.meeting_link||i.mode||'',panelistName:i.interviewer_name||'',attendanceStatus:'SCHEDULED',resultStatus:i.decision==='CLEARED'?'CLEARED':i.decision==='REJECTED'?'REJECTED':'PENDING',feedbackNotes:i.notes||''} as Interview));
       this.state.offers=(offers.offers||[]).map((o:any)=>({id:o.id,collegeId,studentId:o.student_id,companyId:o.company_id,jobId:o.job_id||'',designation:o.role||o.jobTitle||'',ctcLPA:Number(o.total_ctc_lpa||o.fixed_ctc_lpa||0),offerDate:o.created_at,acceptanceDeadline:o.valid_until||'',status:o.status==='ISSUED'?'OFFERED':o.status,statusUpdatedAt:o.created_at,isDreamOffer:false,joiningDate:o.joining_date||'',joiningLocation:o.location||''} as Offer));
       this.state.documents=(documents.documents||[]).map((d:any)=>({id:d.id,collegeId:'inst-apex-01',studentId:d.studentId,documentType:(d.documentType||'RESUME').toUpperCase().replace(' ','_') as any,title:d.title,fileSize:'',uploadDate:d.uploadedAt,status:d.status==='Verified'?'VERIFIED':d.status==='Rejected'?'REJECTED':'PENDING',rejectionReason:d.rejectionReason} as PlacementDocument));
+      const p=profile.profile;
+      const current=this.state.users.find(u=>u.id===this.state.currentUserId);
+      if(p&&current){current.name=p.name||current.name;current.email=p.email||current.email;current.avatar=p.avatarUrl||current.avatar;current.department=p.department||current.department;}
       this.state.auditLogs=(logs.logs||[]).map((l:any)=>({id:l.id,collegeId,userId:l.recruiter_id||'',userName:'CampusLink',userRole:'COLLEGE_TPO',action:'ADMIN_CONFIG_UPDATE',resourceType:l.entity_type||'Audit',resourceId:l.entity_id||'',details:l.details||'',ipAddress:'backend',timestamp:l.created_at} as AuditLog));
       this.save();
     } catch (error) { console.warn('TPO backend unavailable; retaining local development data', error); }
@@ -188,6 +191,18 @@ class RepositoryService {
   }
 
   // Current session & auth context
+  public async updateTpoProfile(updates: {name?:string;email?:string;phone?:string;department?:string;bio?:string;avatarUrl?:string}) {
+    const token = localStorage.getItem(TPO_TOKEN_KEY);
+    if (!token) throw new Error('TPO session is not initialized');
+    const res = await tpoFetch('/api/tpo/profile', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(updates)});
+    const data = await res.json();
+    const p=data.profile;
+    const user=this.state.users.find(u=>u.id===this.state.currentUserId);
+    if(user&&p){user.name=p.name||user.name;user.email=p.email||user.email;user.avatar=p.avatarUrl||user.avatar;user.department=p.department||user.department;}
+    this.save();
+    return p;
+  }
+
   public getCurrentUser(): User {
     const user = this.state.users.find(u => u.id === this.state.currentUserId);
     return user || this.state.users[0];
