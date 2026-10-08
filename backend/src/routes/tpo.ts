@@ -2,6 +2,8 @@ import type { Express } from 'express';
 import * as db from '../services/tpoRepository.js';
 
 export function registerTpoRoutes(app: Express) {
+  app.get('/api/tpo/profile',async(req,res,next)=>{try{const id=(req as any).user?.tpoId||'user-tpo-apex';const r=await db.profile(id);if(!r)return res.status(404).json({error:'TPO profile not found'});res.json({profile:r});}catch(e){next(e);}});
+  app.put('/api/tpo/profile',async(req,res,next)=>{try{const id=(req as any).user?.tpoId||'user-tpo-apex';const r=await db.updateProfile(id,req.body||{});if(!r)return res.status(404).json({error:'TPO profile not found'});res.json({profile:r});}catch(e){next(e);}});
   app.get('/api/tpo/health',async(_req,res,next)=>{try{res.json({ok:true,role:'TPO',institution:await db.institution()});}catch(e){next(e);}});
   app.get('/api/tpo/dashboard',async(_req,res,next)=>{try{const [institution,students,companies,jobs,applications,drives,offers]=await Promise.all([db.institution(),db.students(),db.companies(),db.jobs(),db.applications(),db.drives(),db.offers()]);const placed=offers.length;res.json({institution,metrics:{totalStudents:institution.activeStudents,placedStudents:placed,activeCompanies:companies.length,activeDrives:drives.length,placementRate:institution.activeStudents?Number(((placed/institution.activeStudents)*100).toFixed(1)):0,trackedStudents:students.length},pipeline:{applications:applications.length,shortlisted:applications.filter((a:any)=>['SHORTLISTED','INTERVIEW'].includes(a.status)).length,offers:offers.length}});}catch(e){next(e);}});
   app.get('/api/tpo/students',async(_req,res,next)=>{try{const students=await db.students();res.json({students,total:students.length});}catch(e){next(e);}});
