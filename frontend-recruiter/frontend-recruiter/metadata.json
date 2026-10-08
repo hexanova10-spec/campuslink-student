@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix CampusLink Recruiter",
+  "description": "AI-powered hiring workspace for recruiters to manage jobs, rank authorized applicants, and streamline campus recruitment workflows securely.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
