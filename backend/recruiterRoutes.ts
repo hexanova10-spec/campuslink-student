@@ -100,7 +100,7 @@ router.put('/api/recruiter/company-profile', (req: Request, res: Response) => {
   res.json({ success: true, company });
 });
 
-app.get('/api/recruiter/jobs', (req: Request, res: Response) => {
+router.get('/api/recruiter/jobs', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const companyJobs = jobs.filter((j) => j.companyId === company.id);
 
@@ -124,7 +124,7 @@ app.get('/api/recruiter/jobs', (req: Request, res: Response) => {
   res.json({ jobs: enriched });
 });
 
-app.post('/api/recruiter/jobs', (req: Request, res: Response) => {
+router.post('/api/recruiter/jobs', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const {
     title,
@@ -184,7 +184,7 @@ app.post('/api/recruiter/jobs', (req: Request, res: Response) => {
   res.json({ success: true, job: newJob });
 });
 
-app.get('/api/recruiter/jobs/:jobId/applications', (req: Request, res: Response) => {
+router.get('/api/recruiter/jobs/:jobId/applications', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const { jobId } = req.params;
 
@@ -223,7 +223,7 @@ app.get('/api/recruiter/jobs/:jobId/applications', (req: Request, res: Response)
   });
 });
 
-app.get('/api/recruiter/applicants/all-authorized', (req: Request, res: Response) => {
+router.get('/api/recruiter/applicants/all-authorized', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const companyApplications = applications.filter((app) => app.companyId === company.id);
 
@@ -245,7 +245,7 @@ app.get('/api/recruiter/applicants/all-authorized', (req: Request, res: Response
   });
 });
 
-app.get('/api/recruiter/candidates/:candidateId', (req: Request, res: Response) => {
+router.get('/api/recruiter/candidates/:candidateId', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const { candidateId } = req.params;
 
@@ -286,7 +286,7 @@ app.get('/api/recruiter/candidates/:candidateId', (req: Request, res: Response) 
   });
 });
 
-app.post('/api/security/test-breach-attempt', (req: Request, res: Response) => {
+router.post('/api/security/test-breach-attempt', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const { targetType } = req.body;
 
@@ -317,7 +317,7 @@ app.post('/api/security/test-breach-attempt', (req: Request, res: Response) => {
   });
 });
 
-app.post('/api/recruiter/applications/:applicationId/status', (req: Request, res: Response) => {
+router.post('/api/recruiter/applications/:applicationId/status', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const recruiter = getCurrentRecruiter();
   const { applicationId } = req.params;
@@ -380,7 +380,7 @@ app.post('/api/recruiter/applications/:applicationId/status', (req: Request, res
   res.json({ success: true, application: appRecord, message: status === 'REJECTED' ? 'Candidate rejected successfully.' : 'Status updated.' });
 });
 
-app.post('/api/recruiter/applications/bulk-action', (req: Request, res: Response) => {
+router.post('/api/recruiter/applications/bulk-action', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const recruiter = getCurrentRecruiter();
   const { applicationIds, targetStatus, rejectionReason, rejection_reason, rejection_comment } = req.body;
@@ -418,12 +418,12 @@ app.post('/api/recruiter/applications/bulk-action', (req: Request, res: Response
   res.json({ success: true, updatedCount, targetStatus, message: targetStatus === 'REJECTED' ? 'Candidates rejected successfully.' : 'Status updated.' });
 });
 
-app.get('/api/recruiter/drives', (req: Request, res: Response) => {
+router.get('/api/recruiter/drives', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   res.json({ drives: drives.filter((d) => d.companyId === company.id) });
 });
 
-app.post('/api/recruiter/drives', (req: Request, res: Response) => {
+router.post('/api/recruiter/drives', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const newDrive: PlacementDrive = {
     id: `drv-${company.id.split('-')[1]}-${Date.now().toString(36)}`,
@@ -447,7 +447,7 @@ app.post('/api/recruiter/drives', (req: Request, res: Response) => {
   res.json({ success: true, drive: newDrive });
 });
 
-app.get('/api/recruiter/interviews', (req: Request, res: Response) => {
+router.get('/api/recruiter/interviews', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const companyInterviews = interviews.filter((i) => i.companyId === company.id);
 
@@ -466,7 +466,7 @@ app.get('/api/recruiter/interviews', (req: Request, res: Response) => {
   res.json({ interviews: enriched });
 });
 
-app.post('/api/recruiter/interviews', (req: Request, res: Response) => {
+router.post('/api/recruiter/interviews', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const app = applications.find((a) => a.id === req.body.applicationId && a.companyId === company.id);
   if (!app) {
@@ -496,7 +496,7 @@ app.post('/api/recruiter/interviews', (req: Request, res: Response) => {
   res.json({ success: true, interview: newInterview });
 });
 
-app.post('/api/recruiter/interviews/:interviewId/evaluation', (req: Request, res: Response) => {
+router.post('/api/recruiter/interviews/:interviewId/evaluation', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const { interviewId } = req.params;
   const { score, notes, decision, aiAnalysis } = req.body;
@@ -522,7 +522,7 @@ app.post('/api/recruiter/interviews/:interviewId/evaluation', (req: Request, res
   res.json({ success: true, interview: intv });
 });
 
-app.get('/api/recruiter/offers', (req: Request, res: Response) => {
+router.get('/api/recruiter/offers', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const companyOffers = offers.filter((o) => o.companyId === company.id);
 
@@ -540,7 +540,7 @@ app.get('/api/recruiter/offers', (req: Request, res: Response) => {
   res.json({ offers: enriched });
 });
 
-app.post('/api/recruiter/offers', (req: Request, res: Response) => {
+router.post('/api/recruiter/offers', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const app = applications.find((a) => a.id === req.body.applicationId && a.companyId === company.id);
   if (!app) {
@@ -597,7 +597,7 @@ ${company.name}`;
   res.json({ success: true, offer: newOffer });
 });
 
-app.get('/api/recruiter/analytics', (req: Request, res: Response) => {
+router.get('/api/recruiter/analytics', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   const companyJobs = jobs.filter((j) => j.companyId === company.id);
   const companyApps = applications.filter((a) => a.companyId === company.id);
@@ -635,28 +635,28 @@ app.get('/api/recruiter/analytics', (req: Request, res: Response) => {
   });
 });
 
-app.get('/api/recruiter/notifications', (req: Request, res: Response) => {
+router.get('/api/recruiter/notifications', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   res.json({ notifications: notifications.filter((n) => n.companyId === company.id) });
 });
 
-app.post('/api/recruiter/notifications/:id/read', (req: Request, res: Response) => {
+router.post('/api/recruiter/notifications/:id/read', (req: Request, res: Response) => {
   const notif = notifications.find((n) => n.id === req.params.id);
   if (notif) notif.read = true;
   res.json({ success: true });
 });
 
-app.get('/api/recruiter/audit-logs', (req: Request, res: Response) => {
+router.get('/api/recruiter/audit-logs', (req: Request, res: Response) => {
   const company = getCurrentCompany();
   res.json({ logs: auditLogs.filter((l) => l.companyId === company.id) });
 });
 
-app.get('/api/recruiter/schema-sql', (req: Request, res: Response) => {
+router.get('/api/recruiter/schema-sql', (req: Request, res: Response) => {
   res.json({ schemaSql: POSTGRESQL_SCHEMA_SQL });
 });
 
 // GEMINI AI ROUTES
-app.post('/api/ai/parse-jd', async (req: Request, res: Response) => {
+router.post('/api/ai/parse-jd', async (req: Request, res: Response) => {
   try {
     const { jdText } = req.body;
     if (!jdText) return res.status(400).json({ error: 'Text required' });
@@ -711,12 +711,12 @@ app.post('/api/ai/parse-jd', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/ai/match-candidates', async (req: Request, res: Response) => {
+router.post('/api/ai/match-candidates', async (req: Request, res: Response) => {
   createAuditLog('AI_CANDIDATE_MATCH_RUN', 'APPLICATION', req.body.jobId, `Ran AI matching on authorized applicants`);
   res.json({ success: true, message: 'Matching heuristic recalibrated.' });
 });
 
-app.post('/api/ai/interview-eval', async (req: Request, res: Response) => {
+router.post('/api/ai/interview-eval', async (req: Request, res: Response) => {
   try {
     const { notes, candidateName, role } = req.body;
     const prompt = `Analyze this technical interview feedback for candidate ${candidateName || 'Candidate'} for role ${role || 'Software Engineer'}:\n"""${notes}"""`;
@@ -761,7 +761,7 @@ app.post('/api/ai/interview-eval', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/ai/assistant', async (req: Request, res: Response) => {
+router.post('/api/ai/assistant', async (req: Request, res: Response) => {
   try {
     const company = getCurrentCompany();
     const recruiter = getCurrentRecruiter();
