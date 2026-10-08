@@ -912,6 +912,19 @@ const EXPANDED_DEMO_CANDIDATE_ACCESS: CandidateAccess[] = Array.from({ length: 2
   grantedAt: '2026-10-04T09:00:00Z'
 }));
 INITIAL_CANDIDATE_ACCESS.push(...EXPANDED_DEMO_CANDIDATE_ACCESS);
+ 
+// Keep demo candidate data available to every seeded recruiter company, not only Apex.
+// These records are mock data for local/demo workflows; real deployments should use the shared database.
+const EXPANDED_OTHER_COMPANY_ACCESS: CandidateAccess[] = Array.from({ length: 24 }, (_, i) => {
+  const studentNumber = i + 25;
+  const studentId = `stu-odia-${String(studentNumber).padStart(3, '0')}`;
+  const grantedAt = '2026-10-04T09:00:00Z';
+  return [
+    { id: `acc-nova-demo-${String(i + 1).padStart(3, '0')}`, companyId: 'company-nova-102', studentId, accessType: 'TPO_SHARED_DRIVE', grantedAt },
+    { id: `acc-quantum-demo-${String(i + 1).padStart(3, '0')}`, companyId: 'company-quantum-103', studentId, accessType: 'TPO_SHARED_DRIVE', grantedAt }
+  ];
+}).flat();
+INITIAL_CANDIDATE_ACCESS.push(...EXPANDED_OTHER_COMPANY_ACCESS);
 
 export const INITIAL_APPLICATIONS: Application[] = [
   {
@@ -1197,6 +1210,30 @@ const EXPANDED_DEMO_APPLICATIONS: Application[] = Array.from({ length: 24 }, (_,
   aiRecommendation: i % 4 === 2 ? 'Strong Hire' : i % 4 === 0 ? 'Recommended' : 'Consider'
 }));
 INITIAL_APPLICATIONS.push(...EXPANDED_DEMO_APPLICATIONS);
+ 
+// Seed 24 applicants for both Nova and Quantum as well, so switching recruiter company
+// does not lead to an empty applicants/candidates view in the demo.
+const EXPANDED_OTHER_COMPANY_APPLICATIONS: Application[] = (['company-nova-102', 'company-quantum-103'] as const).flatMap((companyId, companyIndex) =>
+  Array.from({ length: 24 }, (_, i) => {
+    const studentNumber = i + 25;
+    const studentId = `stu-odia-${String(studentNumber).padStart(3, '0')}`;
+    const isNova = companyId === 'company-nova-102';
+    return {
+      id: `app-${isNova ? 'nova' : 'quantum'}-demo-${String(i + 1).padStart(3, '0')}`,
+      jobId: isNova ? 'job-nova-cloud-3' : 'job-quantum-bio-4',
+      companyId,
+      studentId,
+      appliedDate: new Date(Date.UTC(2026, 8, 22 + (i % 8), 9 + (i % 8), 0, 0)).toISOString(),
+      status: (['APPLIED', 'UNDER REVIEW', 'SHORTLISTED', 'INTERVIEW'] as const)[(i + companyIndex) % 4],
+      recruiterNotes: isNova
+        ? 'CampusLink demo candidate. Review cloud, Linux and infrastructure skills.'
+        : 'CampusLink demo candidate. Review Python, data science and research skills.',
+      aiMatchScore: 72 + ((i * 9 + companyIndex * 3) % 27),
+      aiRecommendation: i % 5 === 0 ? 'Strong Hire' : i % 3 === 0 ? 'Recommended' : 'Consider'
+    } as Application;
+  })
+);
+INITIAL_APPLICATIONS.push(...EXPANDED_OTHER_COMPANY_APPLICATIONS);
 
 export const INITIAL_INTERVIEWS: InterviewRecord[] = [
   {
