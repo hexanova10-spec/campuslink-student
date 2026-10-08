@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { createStudentApplication, listStudentApplications, withdrawStudentApplication } from './src/services/recruitmentRepository.js';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
