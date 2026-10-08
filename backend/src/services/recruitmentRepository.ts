@@ -44,7 +44,11 @@ export async function getApplication(companyId:string,id:string) {
   const r=await query('SELECT * FROM recruitment_applications WHERE company_id=$1 AND id=$2',[companyId,id]); return r.rows[0]||null;
 }
 export async function updateApplication(companyId:string,id:string,b:any) {
-  const r=await query(`UPDATE recruitment_applications SET status=$3,rejection_reason=$4,rejection_notes=$5,updated_at=CURRENT_TIMESTAMP WHERE company_id=$1 AND id=$2 RETURNING *`,[companyId,id,b.status,b.rejectionReason||b.rejection_reason||null,b.rejectionNotes||b.rejection_comment||null]); return r.rows[0]||null;
+  const r=await query(`UPDATE recruitment_applications SET status=$3,rejection_reason=$4,rejection_notes=$5,updated_at=CURRENT_TIMESTAMP WHERE company_id=$1 AND id=$2 RETURNING *`,[companyId,id,b.status,b.rejectionReason||b.rejection_reason||null,b.rejectionNotes||b.rejection_comment||null]); const a=r.rows[0];
+  if (a && ['SHORTLISTED','REJECTED','SELECTED','OFFERED','ACCEPTED'].includes(a.status)) {
+    await query(`INSERT INTO notifications_global (user_id,company_id,title,message,category,action_route) SELECT u.id,$2,$3,$4,'application','applications' FROM users u WHERE u.id=(SELECT user_id FROM students WHERE id=$1)`,[a.student_id,companyId,'Application status updated','Your application status is now '+a.status+'.']);
+  }
+  return a||null;
 }
 export async function createDrive(companyId:string,b:any) {
   const r=await query(`INSERT INTO placement_drives (company_id,job_id,drive_title,drive_date,time_slot,duration_hours,campus_name,interview_type,target_candidate_count,rounds,special_requirements)
