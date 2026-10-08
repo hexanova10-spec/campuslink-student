@@ -52,7 +52,7 @@ export const AuthSwitcherScreen: React.FC<AuthSwitcherScreenProps> = ({ onSelect
               )}
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-white">Dr. Rajesh Nair</h3>
+              <h3 className="font-extrabold text-base text-white">Mrutyunjya Dash</h3>
               <div className="text-xs text-slate-400 mt-0.5">Apex Institute of Technology (Pune)</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-300 space-y-1">
@@ -90,7 +90,7 @@ export const AuthSwitcherScreen: React.FC<AuthSwitcherScreenProps> = ({ onSelect
               )}
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-white">Dr. Sunita Kulkarni</h3>
+              <h3 className="font-extrabold text-base text-white">Sisira Kanta Padhi</h3>
               <div className="text-xs text-slate-400 mt-0.5">Metro University of Engineering (BLR)</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-300 space-y-1">
@@ -128,7 +128,7 @@ export const AuthSwitcherScreen: React.FC<AuthSwitcherScreenProps> = ({ onSelect
               )}
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-white">Samantha Vance</h3>
+              <h3 className="font-extrabold text-base text-white">Ronali Mohanty</h3>
               <div className="text-xs text-slate-400 mt-0.5">CampusLink Platform Operations</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-300 space-y-1">
