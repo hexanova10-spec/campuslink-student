@@ -214,10 +214,10 @@ export const Header: React.FC = () => {
           />
           <div className="hidden xl:block text-left">
             <p className={`text-xs font-bold transition-colors ${isLight ? 'text-slate-900 group-hover:text-blue-700' : 'text-white group-hover:text-blue-300'}`}>
-              {recruiter?.name || 'Recruiter'}
+              {recruiter?.name || 'Rajashree Sahoo'}
             </p>
             <p className={`text-[10px] truncate max-w-[130px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              {company?.name || 'Company'}
+              {company?.name || 'Apex Technologies'}
             </p>
           </div>
         </div>
