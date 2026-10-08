@@ -227,8 +227,8 @@ export const INITIAL_COMPANIES: Company[] = [
     tier: 'Tier-1 Elite Campus Partner',
     recruiterContacts: [
       {
-        name: 'Priya Sharma',
-        email: 'priya.sharma@apexfintech.example.com',
+        name: 'Rajashree Sahoo',
+        email: 'rajashree.sahoo@apexfintech.example.com',
         phone: '+91 98201 44521',
         designation: 'Head of University Relations & Talent Acquisition'
       },
