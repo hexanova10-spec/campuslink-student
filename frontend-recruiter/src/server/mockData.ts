@@ -314,6 +314,27 @@ export const INITIAL_RECRUITERS: Recruiter[] = [
   }
 ];
 
+
+const ODIA_RECRUITER_FIRST_NAMES = ['Abhijit','Rudranarayan','Sambit','Sourav','Subham','Soumya','Debasish','Debasmita','Sasmita','Pratik','Pranab','Pratyush','Ananya','Anwesha','Archita','Astha','Ayush','Bikash','Biswajit','Chinmay','Deepak','Dibya','Dipti','Durga','Ipsita','Kalyani','Koustav','Lopamudra','Manas','Madhusmita','Nihar','Niranjan','Pallavi','Piyush','Rakesh','Rashmi'];
+const ODIA_RECRUITER_SURNAMES = ['Sahoo','Pani','Mohanty','Behera','Nayak','Pradhan','Jena','Rout','Barik','Samal','Swain','Das','Panda','Patnaik','Maharana','Tripathy','Acharya','Routray'];
+const RECRUITER_COMPANIES = ['company-apex-101','company-nova-102','company-quantum-103'];
+
+INITIAL_RECRUITERS.push(...ODIA_RECRUITER_FIRST_NAMES.map((first,i) => {
+  const last = ODIA_RECRUITER_SURNAMES[i % ODIA_RECRUITER_SURNAMES.length];
+  const companyId = RECRUITER_COMPANIES[i % RECRUITER_COMPANIES.length];
+  return {
+    id: `recruiter-odia-${String(i+1).padStart(2,'0')}`,
+    companyId,
+    name: `${first} ${last}`,
+    email: `${first.toLowerCase()}.${last.toLowerCase()}${i+1}@campuslink.example.com`,
+    designation: i % 5 === 0 ? 'Campus Talent Acquisition Lead' : 'Senior Campus Recruiter',
+    phone: `+91 98${String(2000000 + i * 8731).slice(0,8)}`,
+    avatarUrl: `https://i.pravatar.cc/150?img=${10+i}`,
+    role: i % 5 === 0 ? 'RECRUITER_ADMIN' : 'RECRUITER',
+    department: i % 2 === 0 ? 'Campus Talent Acquisition' : 'Engineering Hiring'
+  } as Recruiter;
+}));
+
 export const INITIAL_JOBS: JobRequisition[] = [
   {
     id: 'job-apex-se-1',
@@ -772,6 +793,62 @@ export const GLOBAL_CAMPUS_STUDENTS: StudentProfile[] = [
     otherCompanyApplicationsCount: 0
   }
 ];
+const ODIA_STUDENT_FIRST_NAMES = ['Abhijit','Rudranarayan','Sambit','Sourav','Subham','Soumya','Debasish','Debasmita','Sasmita','Pratik','Pranab','Pratyush','Ananya','Anwesha','Archita','Astha','Ayush','Bikash','Biswajit','Chinmay','Deepak','Dibya','Dipti','Durga','Ipsita','Kalyani','Koustav','Lopamudra','Manas','Madhusmita','Nihar','Niranjan','Pallavi','Piyush','Rakesh','Rashmi','Ritik','Ritu','Sagnik','Sakshi','Sambhab','Sanjay','Saswat','Shreya','Shubham','Siddhant','Sneha','Subrat','Swati','Tanmaya','Tapan','Tushar','Udit','Urmila','Varsha','Vivek','Yash','Yogesh'];
+const ODIA_STUDENT_SURNAMES = ['Sahoo','Pani','Mohanty','Behera','Nayak','Pradhan','Jena','Rout','Barik','Samal','Swain','Das','Panda','Patnaik','Maharana','Tripathy','Acharya','Routray','Dhal','Mishra'];
+const ODIA_STUDENT_BRANCHES = ['Computer Science & Engineering','Information Technology','Electronics & Comm.','Electrical Engineering','Mechanical Engineering','Data Science & AI'];
+const ODIA_STUDENT_SKILLS = [['React','TypeScript','SQL'],['Python','FastAPI','PostgreSQL'],['Java','Spring Boot','DSA'],['C++','System Design','Linux'],['AWS','Docker','Kubernetes'],['Python','Machine Learning','Pandas']];
+
+const EXPANDED_RECRUITER_STUDENTS: StudentProfile[] = Array.from({ length: 125 }, (_, i) => {
+  const first = ODIA_STUDENT_FIRST_NAMES[(i + 2) % ODIA_STUDENT_FIRST_NAMES.length];
+  const last = ODIA_STUDENT_SURNAMES[(i * 3 + 1) % ODIA_STUDENT_SURNAMES.length];
+  const branch = ODIA_STUDENT_BRANCHES[i % ODIA_STUDENT_BRANCHES.length];
+  const cgpa = Number((7.10 + ((i * 17) % 220) / 100).toFixed(2));
+  return {
+    id: `stu-odia-${String(i+1).padStart(3,'0')}`,
+    fullName: `${first} ${last}`,
+    email: `${first.toLowerCase()}.${last.toLowerCase()}.${i+1}@campus.edu`,
+    phone: `+91 98${String(1000000 + i * 7919).slice(0,8)}`,
+    avatarUrl: `https://i.pravatar.cc/120?img=${(i % 70)+1}`,
+    collegeName: ['KIIT University, Bhubaneswar','Silicon University, Bhubaneswar','ITER, Bhubaneswar','Ravenshaw University, Cuttack'][i % 4],
+    rollNumber: `23${branch.slice(0,2).toUpperCase()}OD${String(i+20).padStart(3,'0')}`,
+    branch,
+    graduationYear: 2027,
+    cgpa,
+    activeBacklogs: i % 17 === 0 ? 1 : 0,
+    skills: ODIA_STUDENT_SKILLS[i % ODIA_STUDENT_SKILLS.length],
+    projects: [{ title: 'Campus Placement Analytics', techStack: ODIA_STUDENT_SKILLS[i % ODIA_STUDENT_SKILLS.length], description: 'Built a placement-focused academic project using an Indian campus recruitment dataset.' }],
+    experience: i % 4 === 0 ? [{ company: 'Odisha Tech Internship Program', role: 'Software Engineering Intern', duration: 'May 2026 - Jul 2026', summary: 'Worked on APIs, dashboards and data workflows.' }] : [],
+    certifications: i % 3 === 0 ? ['NPTEL Programming','AWS Cloud Practitioner'] : ['NPTEL Programming'],
+    resumeUrl: `https://cdn.campuslink.example.com/resumes/stu-odia-${i+1}.pdf`,
+    resumeText: `${first} ${last}. B.Tech student from Odisha with ${cgpa} CGPA, skills in ${ODIA_STUDENT_SKILLS[i % ODIA_STUDENT_SKILLS.length].join(', ')}.`,
+    codingProfiles: [{ platform: 'LeetCode', handle: `${first.toLowerCase()}_${i+1}`, score: `${1450 + (i % 600)}` }]
+  };
+});
+
+const SIDDHARTH_RECRUITER_PROFILE: StudentProfile = {
+  id: 'stu-siddharth-das',
+  fullName: 'Siddharth Das',
+  email: 'aarav.sharma@campus.edu',
+  phone: '+91 98765 43210',
+  avatarUrl: 'https://i.pravatar.cc/120?img=12',
+  collegeName: 'KIIT University, Bhubaneswar',
+  rollNumber: '2023-CSE-100',
+  branch: 'Computer Science & Engineering',
+  graduationYear: 2027,
+  cgpa: 9.10,
+  activeBacklogs: 0,
+  skills: ['React','TypeScript','Node.js','Python','PostgreSQL','AWS'],
+  projects: [{ title: 'CampusLink Placement Platform', techStack: ['React','TypeScript','Node.js','PostgreSQL'], description: 'Full-stack campus placement workflow connecting students, recruiters and TPOs.' }],
+  experience: [{ company: 'CampusLink', role: 'Student Developer', duration: '2026 - Present', summary: 'Built placement workflows, profile tooling and recruitment integrations.' }],
+  certifications: ['AWS Cloud Practitioner'],
+  resumeUrl: 'https://cdn.campuslink.example.com/resumes/siddharth-das.pdf',
+  resumeText: 'Siddharth Das. B.Tech CSE student from Bhubaneswar with 9.10 CGPA. Full-stack engineering, cloud and placement readiness profile.',
+  codingProfiles: [{ platform: 'LeetCode', handle: 'siddharth_das', score: '1840' }]
+};
+
+GLOBAL_CAMPUS_STUDENTS.unshift(SIDDHARTH_RECRUITER_PROFILE);
+GLOBAL_CAMPUS_STUDENTS.push(...EXPANDED_RECRUITER_STUDENTS);
+
 
 export const INITIAL_CANDIDATE_ACCESS: CandidateAccess[] = [
   { id: 'acc-1', companyId: 'company-apex-101', studentId: 'stu-apex-01', accessType: 'JOB_APPLICATION', grantedAt: '2026-09-15T12:00:00Z' },
