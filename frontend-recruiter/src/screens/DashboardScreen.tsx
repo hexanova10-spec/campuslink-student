@@ -109,7 +109,7 @@ export const DashboardScreen: React.FC = () => {
             </div>
             <p className="text-sm font-semibold text-white mt-1">
               {applications.length > 0
-                ? `"${applications.filter((app) => app.student && (app.status === 'APPLIED' || app.status === 'UNDER REVIEW' || app.status === 'SHORTLISTED' || app.status === 'INTERVIEW')).length} authorized applicants are in the active pipeline for ${applications[0]?.jobTitle || 'your open roles'}. ${applications.filter((app) => (app.aiMatchScore ?? 0) >= 80).length} have a recorded match score of 80% or higher."`
+                ? `"${applications.filter((app) => app.student && (app.status === 'APPLIED' || app.status === 'UNDER REVIEW' || app.status === 'SHORTLISTED' || app.status === 'INTERVIEW')).length} authorized applicants are active across your open roles. ${applications.filter((app) => app.student && (app.aiMatchScore ?? 0) >= 80).length} have a recorded match score of 80% or higher."`
                 : '"No authorized applications are currently available. Refresh data or verify the recruiter session and backend connection."'}
             </p>
             <p className="text-xs text-blue-100 mt-0.5">
