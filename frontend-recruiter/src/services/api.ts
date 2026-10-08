@@ -161,7 +161,7 @@ export const api = {
     const res = await fetchRecruiter('/api/recruiter/jobs');
     if (!res.ok) throw new Error('Unable to load recruiter jobs from the shared CampusLink backend.');
     return await res.json();
-  }
+  },
 
   async createJob(jobData: Partial<JobRequisition>) {
     const res = await fetchRecruiter('/api/recruiter/jobs', {
@@ -174,7 +174,7 @@ export const api = {
       throw new Error(data.error || 'Unable to create job in the shared CampusLink backend.');
     }
     return await res.json();
-  }
+  },
 
   // Applicants & Candidate Dossier
   async getAllAuthorizedApplicants() {
