@@ -215,7 +215,7 @@ export const JobDetailsScreen: React.FC = () => {
         <div className="space-y-3">
           <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Campus Selection Rounds</h2>
           <div className="space-y-2">
-            {job.selection_rounds.map((rnd, idx) => (
+            {(job.selection_rounds ?? []).map((rnd, idx) => (
               <div
                 key={idx}
                 className="p-3 rounded-xl bg-blue-50/50 dark:bg-[#040814]/70 border border-blue-100 dark:border-slate-800 flex items-center gap-3 text-xs text-slate-800 dark:text-slate-200"
@@ -233,7 +233,7 @@ export const JobDetailsScreen: React.FC = () => {
         <div className="space-y-3 pt-2">
           <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Required Skills Audit</h2>
           <div className="flex flex-wrap gap-2">
-            {job.required_skills.map((sk, idx) => {
+            {(job.required_skills ?? []).map((sk, idx) => {
               const hasSkill = job.matchedSkills?.includes(sk);
               return (
                 <span
