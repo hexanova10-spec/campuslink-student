@@ -80,7 +80,7 @@ function authenticateStudent(req: AuthenticatedRequest, res: Response, next: Nex
 // ---------------------------------------------------------
 
 // Register Student
-app.post('/api/auth/register', (req: Request, res: Response) => {
+app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
     const { fullName, email, password, mobile, college, branch, graduationYear } = req.body;
 
@@ -121,7 +121,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 });
 
 // Login Student
-app.post('/api/auth/login', (req: Request, res: Response) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
