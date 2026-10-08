@@ -1,0 +1,8 @@
+{
+  "name": "Remix CampusLink Student",
+  "description": "An AI-powered platform for students to track career readiness, bridge skill gaps, and secure personalized job placements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

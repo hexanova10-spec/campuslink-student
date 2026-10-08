@@ -1,0 +1,8 @@
+{
+  "name": "Remix CampusLink TPO Command Center",
+  "description": "An AI-driven intelligence platform for placement officers and administrators to manage campus drives, student readiness, and recruitment workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
