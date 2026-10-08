@@ -1,3 +1,26 @@
+const RECRUITER_TOKEN_KEY = 'campuslink_recruiter_jwt';
+
+async function ensureRecruiterToken(): Promise<string> {
+  const existing = localStorage.getItem(RECRUITER_TOKEN_KEY);
+  if (existing) return existing;
+  const res = await fetchRecruiter('/api/recruiter/auth/dev-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recruiterId: 'recruiter-apex-1', companyId: 'company-apex' })
+  });
+  if (!res.ok) throw new Error(`Recruiter session bootstrap failed: ${res.status}`);
+  const data = await res.json();
+  localStorage.setItem(RECRUITER_TOKEN_KEY, data.token);
+  return data.token;
+}
+
+async function fetchRecruiter(input: RequestInfo | URL, init: RequestInit = {}) {
+  const token = await ensureRecruiterToken();
+  const headers = new Headers(init.headers || {});
+  headers.set('Authorization', `Bearer ${token}`);
+  return fetch(input, { ...init, headers });
+}
+
 import {
   Company,
   Recruiter,
@@ -77,7 +100,7 @@ export const api = {
   // Session & Company
   async getSession() {
     try {
-      const res = await fetch('/api/recruiter/session');
+      const res = await fetchRecruiter('/api/recruiter/session');
       if (res.ok) return await res.json();
     } catch (e) {
       // Fallback to local
@@ -103,7 +126,7 @@ export const api = {
 
   async switchSession(recruiterId: string) {
     try {
-      const res = await fetch('/api/recruiter/switch-session', {
+      const res = await fetchRecruiter('/api/recruiter/switch-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recruiterId })
@@ -119,7 +142,7 @@ export const api = {
 
   async updateCompanyProfile(data: Partial<Company>) {
     try {
-      const res = await fetch('/api/recruiter/company-profile', {
+      const res = await fetchRecruiter('/api/recruiter/company-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -136,7 +159,7 @@ export const api = {
   // Jobs
   async getJobs() {
     try {
-      const res = await fetch('/api/recruiter/jobs');
+      const res = await fetchRecruiter('/api/recruiter/jobs');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -159,7 +182,7 @@ export const api = {
 
   async createJob(jobData: Partial<JobRequisition>) {
     try {
-      const res = await fetch('/api/recruiter/jobs', {
+      const res = await fetchRecruiter('/api/recruiter/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(jobData)
@@ -201,7 +224,7 @@ export const api = {
   // Applicants & Candidate Dossier
   async getAllAuthorizedApplicants() {
     try {
-      const res = await fetch('/api/recruiter/applicants/all-authorized');
+      const res = await fetchRecruiter('/api/recruiter/applicants/all-authorized');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -226,7 +249,7 @@ export const api = {
 
   async getCandidate(candidateId: string) {
     try {
-      const res = await fetch(`/api/recruiter/candidates/${candidateId}`);
+      const res = await fetchRecruiter(`/api/recruiter/candidates/${candidateId}`);
       const data = await res.json();
       return { status: res.status, ok: res.ok, data };
     } catch (e) {}
@@ -292,7 +315,7 @@ export const api = {
     }
   ) {
     try {
-      const res = await fetch(`/api/recruiter/applications/${applicationId}/status`, {
+      const res = await fetchRecruiter(`/api/recruiter/applications/${applicationId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -366,7 +389,7 @@ export const api = {
     rejection_comment?: string;
   }) {
     try {
-      const res = await fetch('/api/recruiter/applications/bulk-action', {
+      const res = await fetchRecruiter('/api/recruiter/applications/bulk-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -398,7 +421,7 @@ export const api = {
   // Placement Drives
   async getDrives() {
     try {
-      const res = await fetch('/api/recruiter/drives');
+      const res = await fetchRecruiter('/api/recruiter/drives');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -408,7 +431,7 @@ export const api = {
 
   async createDrive(driveData: Partial<PlacementDrive>) {
     try {
-      const res = await fetch('/api/recruiter/drives', {
+      const res = await fetchRecruiter('/api/recruiter/drives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(driveData)
@@ -441,7 +464,7 @@ export const api = {
   // Interviews
   async getInterviews() {
     try {
-      const res = await fetch('/api/recruiter/interviews');
+      const res = await fetchRecruiter('/api/recruiter/interviews');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -472,7 +495,7 @@ export const api = {
     meetingLink?: string;
   }) {
     try {
-      const res = await fetch('/api/recruiter/interviews', {
+      const res = await fetchRecruiter('/api/recruiter/interviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -513,7 +536,7 @@ export const api = {
     }
   ) {
     try {
-      const res = await fetch(`/api/recruiter/interviews/${interviewId}/evaluation`, {
+      const res = await fetchRecruiter(`/api/recruiter/interviews/${interviewId}/evaluation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -542,7 +565,7 @@ export const api = {
   // Offers
   async getOffers() {
     try {
-      const res = await fetch('/api/recruiter/offers');
+      const res = await fetchRecruiter('/api/recruiter/offers');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -572,7 +595,7 @@ export const api = {
     validUntil: string;
   }) {
     try {
-      const res = await fetch('/api/recruiter/offers', {
+      const res = await fetchRecruiter('/api/recruiter/offers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -633,7 +656,7 @@ ${company.name}`;
   // Analytics
   async getAnalytics() {
     try {
-      const res = await fetch('/api/recruiter/analytics');
+      const res = await fetchRecruiter('/api/recruiter/analytics');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -679,7 +702,7 @@ ${company.name}`;
   // Notifications
   async getNotifications() {
     try {
-      const res = await fetch('/api/recruiter/notifications');
+      const res = await fetchRecruiter('/api/recruiter/notifications');
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -689,7 +712,7 @@ ${company.name}`;
 
   async markNotificationRead(id: string) {
     try {
-      const res = await fetch(`/api/recruiter/notifications/${id}/read`, { method: 'POST' });
+      const res = await fetchRecruiter(`/api/recruiter/notifications/${id}/read`, { method: 'POST' });
       if (res.ok) return await res.json();
     } catch (e) {}
 
@@ -701,7 +724,7 @@ ${company.name}`;
   // Security & Audit
   async getAuditLogs() {
     try {
-      const res = await fetch('/api/recruiter/audit-logs');
+      const res = await fetchRecruiter('/api/recruiter/audit-logs');
       if (res.ok) return await res.json();
     } catch (e) {}
 
