@@ -904,6 +904,15 @@ export const INITIAL_CANDIDATE_ACCESS: CandidateAccess[] = [  { id: 'acc-siddhar
   { id: 'acc-10', companyId: 'company-nova-102', studentId: 'stu-nova-02', accessType: 'JOB_APPLICATION', grantedAt: '2026-09-18T16:00:00Z' }
 ];
 
+const EXPANDED_DEMO_CANDIDATE_ACCESS: CandidateAccess[] = Array.from({ length: 24 }, (_, i) => ({
+  id: `acc-odia-demo-${String(i + 1).padStart(3, '0')}`,
+  companyId: 'company-apex-101',
+  studentId: `stu-odia-${String(i + 1).padStart(3, '0')}`,
+  accessType: 'TPO_SHARED_DRIVE',
+  grantedAt: '2026-10-04T09:00:00Z'
+}));
+INITIAL_CANDIDATE_ACCESS.push(...EXPANDED_DEMO_CANDIDATE_ACCESS);
+
 export const INITIAL_APPLICATIONS: Application[] = [
   {
     id: 'app-apex-01',
@@ -1173,6 +1182,21 @@ export const INITIAL_APPLICATIONS: Application[] = [
 ];
 
 INITIAL_APPLICATIONS.push(...SIDDHARTH_RECRUITER_APPLICATIONS);
+
+// Seed realistic demo applications so recruiter dashboards have multiple complete
+// student profiles to review, shortlist and move through the placement workflow.
+const EXPANDED_DEMO_APPLICATIONS: Application[] = Array.from({ length: 24 }, (_, i) => ({
+  id: `app-odia-demo-${String(i + 1).padStart(3, '0')}`,
+  jobId: 'job-apex-se-1',
+  companyId: 'company-apex-101',
+  studentId: `stu-odia-${String(i + 1).padStart(3, '0')}`,
+  appliedDate: new Date(Date.UTC(2026, 8, 20 + (i % 10), 9 + (i % 8), 0, 0)).toISOString(),
+  status: (['APPLIED', 'UNDER REVIEW', 'SHORTLISTED', 'INTERVIEW'] as const)[i % 4],
+  recruiterNotes: 'CampusLink Odisha demo candidate. Review skills, projects and academic fit.',
+  aiMatchScore: 76 + ((i * 7) % 23),
+  aiRecommendation: i % 4 === 2 ? 'Strong Hire' : i % 4 === 0 ? 'Recommended' : 'Consider'
+}));
+INITIAL_APPLICATIONS.push(...EXPANDED_DEMO_APPLICATIONS);
 
 export const INITIAL_INTERVIEWS: InterviewRecord[] = [
   {
