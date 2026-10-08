@@ -145,7 +145,7 @@ export const api = {
       const res = await fetchRecruiter('/api/recruiter/company-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify((data as any).logoUrl !== undefined ? { ...data, logo_url: (data as any).logoUrl } : data)
       });
       if (res.ok) return await res.json();
     } catch (e) {}
