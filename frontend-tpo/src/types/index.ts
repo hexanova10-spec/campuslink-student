@@ -308,6 +308,7 @@ export interface PlacementDocument {
   verifiedByTpoId?: string;
   verifiedAt?: string;
   rejectionReason?: string;
+  fileUrl?: string;
 }
 
 export interface NotificationBroadcast {
