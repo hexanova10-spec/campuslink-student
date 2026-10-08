@@ -76,7 +76,7 @@ function authenticateStudent(req: AuthenticatedRequest, res: Response, next: Nex
 }
 
 function legacyStudentFor(req: AuthenticatedRequest) {
-  const direct = legacyStudentFor(req);
+  const direct = mockDb.getStudentById(req.user!.studentId);
   if (direct) return direct;
   if (req.user?.email) {
     const user = mockDb.getUserByEmail(req.user.email);
