@@ -887,7 +887,6 @@ const SIDDHARTH_RECRUITER_APPLICATIONS: Application[] = [
   }
 ];
 
-INITIAL_APPLICATIONS.push(...SIDDHARTH_RECRUITER_APPLICATIONS);
 
 export const INITIAL_CANDIDATE_ACCESS: CandidateAccess[] = [  { id: 'acc-siddharth-apex', companyId: 'company-apex-101', studentId: 'stu-siddharth-das', accessType: 'JOB_APPLICATION', grantedAt: '2026-10-01T10:00:00Z' },
   { id: 'acc-siddharth-nova', companyId: 'company-nova-102', studentId: 'stu-siddharth-das', accessType: 'JOB_APPLICATION', grantedAt: '2026-10-02T10:00:00Z' },
@@ -1172,6 +1171,8 @@ export const INITIAL_APPLICATIONS: Application[] = [
     aiRecommendation: 'Recommended'
   }
 ];
+
+INITIAL_APPLICATIONS.push(...SIDDHARTH_RECRUITER_APPLICATIONS);
 
 export const INITIAL_INTERVIEWS: InterviewRecord[] = [
   {
