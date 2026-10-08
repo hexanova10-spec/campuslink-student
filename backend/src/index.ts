@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import { app } from '../server.js';
 import { databaseHealth } from './config/db.js';
 import { registerRecruiterRoutes } from './routes/recruiter.js';
@@ -8,6 +9,16 @@ import { authenticate } from './middleware/auth.js';
 import { requireRole } from './middleware/role.js';
 
 dotenv.config();
+
+// Development-only recruiter session bootstrap. Production authentication must come from the real identity provider.
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/recruiter/auth/dev-session', (req, res) => {
+    const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
+    const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
+    const token = jwt.sign({ userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, role: 'RECRUITER' }, process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026', { expiresIn: '8h' });
+    res.json({ token, recruiterId, companyId });
+  });
+}
 
 app.use('/api/recruiter', authenticate, requireRole('RECRUITER'));
 app.use('/api/tpo', authenticate, requireRole('TPO'));
