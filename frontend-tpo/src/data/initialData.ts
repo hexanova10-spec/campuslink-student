@@ -116,6 +116,121 @@ export const INITIAL_USERS: User[] = [
   }
 ];
 
+
+/**
+ * Expanded Odisha demo directory.
+ * These records are deterministic local demo data so TPO/admin screens have
+ * realistic multi-user coverage without changing the tenant isolation rules.
+ */
+const ODIA_FIRST_NAMES = ['Abhijit','Rudranarayan','Sambit','Sourav','Subham','Soumya','Debasish','Debasmita','Sasmita','Pratik','Pranab','Pratyush','Ananya','Anwesha','Archita','Astha','Ayush','Bikash','Biswajit','Chinmay','Deepak','Dibya','Dipti','Durga','Ipsita','Kalyani','Koustav','Lopamudra','Manas','Madhusmita','Nihar','Niranjan','Pallavi','Piyush','Rakesh','Rashmi','Ritik','Ritu','Sagnik','Sakshi','Sambhab','Sanjay','Saswat','Shreya','Shubham','Siddhant','Sneha','Subrat','Swati','Tanmaya','Tapan','Tushar','Udit','Urmila','Varsha','Vivek','Yash','Yogesh'];
+const ODIA_SURNAMES = ['Sahoo','Pani','Mohanty','Behera','Nayak','Pradhan','Jena','Rout','Barik','Samal','Swain','Das','Panda','Patnaik','Maharana','Tripathy','Acharya','Routray','Dhal','Mishra'];
+const ODIA_CITIES = ['Bhubaneswar','Cuttack','Rourkela','Berhampur','Puri','Sambalpur','Balasore','Angul'];
+const ODIA_BRANCHES = ['CSE','IT','ECE','EEE','MECH','Data Science'];
+const ODIA_SKILLS = [['React','TypeScript','SQL'],['Python','FastAPI','PostgreSQL'],['Java','Spring Boot','DSA'],['C++','System Design','Linux'],['AWS','Docker','Kubernetes'],['Python','Machine Learning','Pandas'],['Embedded C','IoT','Verilog']];
+
+INITIAL_USERS.push(
+  ...['Abhijit Behera','Rudranarayan Nayak','Sambit Pradhan','Sourav Jena','Subham Rout','Soumya Barik','Debasish Samal','Debasmita Swain','Sasmita Das','Pratik Panda','Pranab Patnaik','Pratyush Maharana'].map((name,i) => ({
+    id: `user-tpo-odia-${i+1}`,
+    name,
+    email: `${name.toLowerCase().replace(/\\s+/g,'.')}@campuslink.edu`,
+    role: 'COLLEGE_TPO' as const,
+    institutionId: ['inst-apex-01','inst-metro-02','inst-horizon-03'][i % 3],
+    campusId: ['Main City Campus','South Tech Campus','Cyberabad Campus'][i % 3],
+    avatar: `https://i.pravatar.cc/150?img=${20+i}`,
+    department: 'Training & Placement Cell',
+    lastLogin: '2026-10-08T10:00:00Z',
+    status: 'ACTIVE' as const
+  })),
+  ...['Ronali Mohanty','Abhijit Sahoo','Rudranarayan Pani','Sasmita Behera','Pratyush Nayak','Debasmita Pradhan'].map((name,i) => ({
+    id: `user-admin-odia-${i+1}`,
+    name,
+    email: `admin.${name.toLowerCase().replace(/\\s+/g,'.')}@campuslink.edu`,
+    role: 'SYSTEM_ADMIN' as const,
+    avatar: `https://i.pravatar.cc/150?img=${45+i}`,
+    department: 'Global Platform Administration',
+    lastLogin: '2026-10-08T10:00:00Z',
+    status: 'ACTIVE' as const
+  }))
+);
+
+const SIDDHARTH_TPO_PROFILE: Student = {
+  id: 'stu-siddharth-das',
+  collegeId: 'inst-apex-01',
+  campusId: 'Main City Campus',
+  rollNumber: '2023-CSE-100',
+  fullName: 'Siddharth Das',
+  email: 'aarav.sharma@campus.edu',
+  phone: '+91 98765 43210',
+  gender: 'MALE',
+  department: 'Computer Science & Eng',
+  branch: 'CSE',
+  graduationYear: 2027,
+  cgpa: 9.10,
+  tenthPercentage: 95.2,
+  twelfthPercentage: 93.8,
+  activeBacklogs: 0,
+  historyOfBacklogs: 0,
+  readinessLevel: 'HIGHLY_EMPLOYABLE',
+  placementStatus: 'APPLIED',
+  primarySkills: ['React','TypeScript','Node.js','Python','PostgreSQL'],
+  secondarySkills: ['AWS','Docker','System Design'],
+  certifications: ['AWS Cloud Practitioner'],
+  mentorId: 'men-1',
+  isFlaggedAtRisk: false,
+  riskScore: 5,
+  totalApplications: 4,
+  totalRejections: 0,
+  totalInterviews: 2,
+  profileCompletion: 100,
+  resumeVerified: true,
+  placementWillingness: true,
+  optedDreamJob: true
+};
+
+const EXPANDED_TPO_STUDENTS: Student[] = Array.from({ length: 125 }, (_, i) => {
+  const first = ODIA_FIRST_NAMES[(i + 2) % ODIA_FIRST_NAMES.length];
+  const last = ODIA_SURNAMES[(i * 3 + 1) % ODIA_SURNAMES.length];
+  const branch = ODIA_BRANCHES[i % ODIA_BRANCHES.length];
+  const cgpa = Number((7.10 + ((i * 17) % 220) / 100).toFixed(2));
+  const collegeId = ['inst-apex-01','inst-metro-02','inst-horizon-03'][i % 3];
+  return {
+    id: `stu-odia-${String(i + 1).padStart(3,'0')}`,
+    collegeId,
+    campusId: ['Main City Campus','South Tech Campus','Cyberabad Campus'][i % 3],
+    rollNumber: `2023-${branch.replace(/\\s/g,'').slice(0,3)}-${String(i+20).padStart(3,'0')}`,
+    fullName: `${first} ${last}`,
+    email: `${first.toLowerCase()}.${last.toLowerCase()}.${i+1}@campus.edu`,
+    phone: `+91 98${String(1000000 + i * 7919).slice(0,8)}`,
+    gender: i % 3 === 0 ? 'FEMALE' : 'MALE',
+    department: branch === 'CSE' ? 'Computer Science & Eng' : branch,
+    branch,
+    graduationYear: 2027,
+    cgpa,
+    tenthPercentage: Number((78 + (i * 7) % 21 + 0.4).toFixed(1)),
+    twelfthPercentage: Number((76 + (i * 11) % 22 + 0.2).toFixed(1)),
+    activeBacklogs: i % 17 === 0 ? 1 : 0,
+    historyOfBacklogs: i % 13 === 0 ? 1 : 0,
+    readinessLevel: cgpa >= 8.7 ? 'HIGHLY_EMPLOYABLE' : cgpa >= 8 ? 'PLACEMENT_READY' : cgpa >= 7.4 ? 'DEVELOPING' : 'AT_RISK',
+    placementStatus: i % 19 === 0 ? 'SHORTLISTED' : i % 11 === 0 ? 'APPLIED' : 'UNPLACED',
+    primarySkills: ODIA_SKILLS[i % ODIA_SKILLS.length],
+    secondarySkills: ['Git','REST APIs','Communication'],
+    certifications: i % 4 === 0 ? ['NPTEL Programming','AWS Cloud Practitioner'] : ['NPTEL Programming'],
+    isFlaggedAtRisk: cgpa < 7.4,
+    riskScore: Number(Math.max(4, 92 - cgpa * 8).toFixed(1)),
+    totalApplications: i % 7,
+    totalRejections: i % 4,
+    totalInterviews: i % 3,
+    profileCompletion: 78 + (i % 23),
+    resumeVerified: i % 5 !== 0,
+    placementWillingness: true,
+    optedDreamJob: i % 3 === 0,
+    mentorId: ['men-1','men-2','men-3'][i % 3]
+  } as Student;
+});
+
+INITIAL_STUDENTS.unshift(SIDDHARTH_TPO_PROFILE);
+INITIAL_STUDENTS.push(...EXPANDED_TPO_STUDENTS);
+
 export const INITIAL_COMPANIES: Company[] = [
   {
     id: 'comp-google',
