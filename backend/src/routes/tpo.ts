@@ -26,7 +26,7 @@ export function registerTpoRoutes(app: Express) {
   app.get('/api/tpo/offers',async(_req,res,next)=>{try{const offers=await db.offers();res.json({offers,total:offers.length});}catch(e){next(e);}});
   app.patch('/api/tpo/offers/:id/status',async(_req,res)=>res.json({success:true}));
   app.get('/api/tpo/documents',async(_req,res,next)=>{try{const documents=await db.documents();res.json({documents,total:documents.length});}catch(e){next(e);}});
-  app.patch('/api/tpo/documents/:id/verify',(_req,res)=>res.json({success:true}));
+  app.patch('/api/tpo/documents/:id/verify',async(req,res,next)=>{try{const d=await db.verifyDocument(req.params.id,req.body.status||'VERIFIED',req.body.reason);if(!d)return res.status(404).json({error:'Document not found'});res.json({success:true,document:d});}catch(e){next(e);}});
   app.get('/api/tpo/notifications',(_req,res)=>res.json({notifications:[],total:0}));
   app.post('/api/tpo/notifications',(req,res)=>res.status(201).json({success:true,notification:{...req.body,sentAt:new Date().toISOString()}}));
   app.get('/api/tpo/mentors',(_req,res)=>res.json({mentors:[],total:0}));
