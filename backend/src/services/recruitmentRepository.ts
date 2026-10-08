@@ -101,3 +101,15 @@ export async function withdrawStudentApplication(studentId:string,id:string) {
 export async function studentInterviews(studentId:string){ return (await query(`SELECT ri.*,c.name AS company_name,j.title AS role_title FROM recruitment_interviews ri JOIN companies c ON c.id=ri.company_id LEFT JOIN jobs j ON j.id=ri.job_id WHERE ri.student_id=$1 ORDER BY ri.scheduled_time ASC NULLS LAST`,[studentId])).rows; }
 export async function studentOffers(studentId:string){ return (await query(`SELECT ro.*,c.name AS company_name,j.title AS job_title FROM recruitment_offers ro JOIN companies c ON c.id=ro.company_id LEFT JOIN jobs j ON j.id=ro.job_id WHERE ro.student_id=$1 ORDER BY ro.created_at DESC`,[studentId])).rows; }
 export async function studentNotifications(studentId:string){ return (await query(`SELECT ng.* FROM notifications_global ng JOIN users u ON u.id=ng.user_id JOIN students s ON s.user_id=u.id WHERE s.id=$1 ORDER BY ng.created_at DESC`,[studentId])).rows; }
+
+export async function studentOfferDecision(studentId:string, offerId:string, decision:string){
+  if(!['ACCEPTED','DECLINED'].includes(decision)) return {error:'INVALID_DECISION'} as const;
+  const offer=(await query(`SELECT * FROM recruitment_offers WHERE id=$1 AND student_id=$2`,[offerId,studentId])).rows[0];
+  if(!offer) return {error:'OFFER_NOT_FOUND'} as const;
+  if(offer.status!=='ISSUED') return {error:'OFFER_ALREADY_DECIDED',status:offer.status} as const;
+  const next=decision==='ACCEPTED'?'ACCEPTED':'DECLINED';
+  const updated=(await query(`UPDATE recruitment_offers SET status=$3 WHERE id=$1 AND student_id=$2 RETURNING *`,[offerId,studentId,next])).rows[0];
+  await query(`UPDATE recruitment_applications SET status=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND student_id=$3`,[offer.application_id,next,studentId]);
+  await query(`INSERT INTO notifications_global (user_id,company_id,title,message,category,action_route) SELECT u.id,$2,$3,$4,'placement','applications' FROM users u WHERE u.id=(SELECT user_id FROM students WHERE id=$1)`,[studentId,offer.company_id,next==='ACCEPTED'?'Offer accepted. Your placement is confirmed.':'Offer declined.']);
+  return {offer:updated};
+}
