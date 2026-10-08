@@ -332,6 +332,13 @@ CREATE TABLE IF NOT EXISTS companies (
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Demo companies used by the recruiter/TPO development sessions.
+INSERT INTO companies (id, name, industry, website, description, locations)
+VALUES
+  ('company-apex', 'Apex Technologies', 'Technology', 'https://example.com/apex', 'CampusLink demo recruiter company.', ARRAY['Bengaluru','Mumbai']),
+  ('company-nova', 'Nova Cloud Systems', 'Cloud Computing', 'https://example.com/nova', 'CampusLink demo recruiter company.', ARRAY['Hyderabad','Pune'])
+ON CONFLICT (id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS recruiters (
   id VARCHAR(100) PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
