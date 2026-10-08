@@ -850,7 +850,49 @@ GLOBAL_CAMPUS_STUDENTS.unshift(SIDDHARTH_RECRUITER_PROFILE);
 GLOBAL_CAMPUS_STUDENTS.push(...EXPANDED_RECRUITER_STUDENTS);
 
 
-export const INITIAL_CANDIDATE_ACCESS: CandidateAccess[] = [
+
+const SIDDHARTH_RECRUITER_APPLICATIONS: Application[] = [
+  {
+    id: 'app-siddharth-apex',
+    jobId: 'job-apex-se-1',
+    companyId: 'company-apex-101',
+    studentId: 'stu-siddharth-das',
+    appliedDate: '2026-10-01T10:00:00Z',
+    status: 'SHORTLISTED',
+    recruiterNotes: 'Primary CampusLink demo student. Strong full-stack and cloud profile.',
+    aiMatchScore: 93,
+    aiRecommendation: 'Strong Hire'
+  },
+  {
+    id: 'app-siddharth-nova',
+    jobId: 'job-nova-cloud-3',
+    companyId: 'company-nova-102',
+    studentId: 'stu-siddharth-das',
+    appliedDate: '2026-10-02T10:00:00Z',
+    status: 'UNDER REVIEW',
+    recruiterNotes: 'Strong TypeScript, Python and cloud fundamentals.',
+    aiMatchScore: 89,
+    aiRecommendation: 'Recommended'
+  },
+  {
+    id: 'app-siddharth-quantum',
+    jobId: 'job-quantum-bio-4',
+    companyId: 'company-quantum-103',
+    studentId: 'stu-siddharth-das',
+    appliedDate: '2026-10-03T10:00:00Z',
+    status: 'APPLIED',
+    recruiterNotes: 'Demo profile shared for cross-role CampusLink workflow testing.',
+    aiMatchScore: 82,
+    aiRecommendation: 'Consider'
+  }
+];
+
+INITIAL_APPLICATIONS.push(...SIDDHARTH_RECRUITER_APPLICATIONS);
+
+export const INITIAL_CANDIDATE_ACCESS: CandidateAccess[] = [  { id: 'acc-siddharth-apex', companyId: 'company-apex-101', studentId: 'stu-siddharth-das', accessType: 'JOB_APPLICATION', grantedAt: '2026-10-01T10:00:00Z' },
+  { id: 'acc-siddharth-nova', companyId: 'company-nova-102', studentId: 'stu-siddharth-das', accessType: 'JOB_APPLICATION', grantedAt: '2026-10-02T10:00:00Z' },
+  { id: 'acc-siddharth-quantum', companyId: 'company-quantum-103', studentId: 'stu-siddharth-das', accessType: 'JOB_APPLICATION', grantedAt: '2026-10-03T10:00:00Z' },
+
   { id: 'acc-1', companyId: 'company-apex-101', studentId: 'stu-apex-01', accessType: 'JOB_APPLICATION', grantedAt: '2026-09-15T12:00:00Z' },
   { id: 'acc-2', companyId: 'company-apex-101', studentId: 'stu-apex-02', accessType: 'JOB_APPLICATION', grantedAt: '2026-09-15T12:30:00Z' },
   { id: 'acc-3', companyId: 'company-apex-101', studentId: 'stu-apex-03', accessType: 'JOB_APPLICATION', grantedAt: '2026-09-16T09:00:00Z' },
