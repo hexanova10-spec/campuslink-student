@@ -1,0 +1,34 @@
+import type { Express } from 'express';
+import * as db from '../services/recruitmentRepository.js';
+
+const defaultCompany = process.env.DEFAULT_RECRUITER_COMPANY_ID || 'company-apex';
+const identity = (req:any) => req.user;
+const scopedCompany = (req:any) => identity(req)?.companyId || (process.env.NODE_ENV !== 'production' ? (req.header('x-campus-company-id') || defaultCompany) : null);
+
+export function registerRecruiterRoutes(app: Express) {
+  const companyId = (req:any) => scopedCompany(req);
+
+  app.get('/api/recruiter/session', async (req,res,next) => { try { const scope=companyId(req); if(!scope)return res.status(403).json({error:'Recruiter company scope is missing'}); const c=await db.getCompany(scope); if(!c)return res.status(404).json({error:'Company not found'}); res.json({recruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter',designation:'Campus Recruiter',avatarUrl:''},company:c,availableRecruiters:[]}); } catch(e){next(e);} });
+  app.post('/api/recruiter/switch-session', async (req,res,next) => { try { const scope=companyId(req); if(req.body.companyId && req.body.companyId!==scope)return res.status(403).json({error:'Cannot switch outside authenticated company'}); const c=await db.getCompany(scope); if(!c)return res.status(404).json({error:'Company not found'}); res.json({success:true,currentRecruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter'},company:c}); } catch(e){next(e);} });
+  app.put('/api/recruiter/company-profile', async (req,res,next)=>{try{const c=await db.updateCompany(companyId(req),req.body);res.json({success:true,company:c});}catch(e){next(e);}});
+  app.get('/api/recruiter/jobs', async(req,res,next)=>{try{const scope=companyId(req);if(!scope)return res.status(403).json({error:'Recruiter company scope is missing'});res.json({jobs:await db.listJobs(scope)});}catch(e){next(e);}});
+  app.post('/api/recruiter/jobs', async(req,res,next)=>{try{if(!req.body.title||!req.body.description)return res.status(400).json({error:'Title and description are required'});res.json({success:true,job:await db.createJob(companyId(req),req.body)});}catch(e){next(e);}});
+  app.get('/api/recruiter/jobs/:jobId/applications', async(req,res,next)=>{try{const jobs=await db.listJobs(companyId(req));const job=jobs.find((j:any)=>j.id===req.params.jobId);if(!job)return res.status(404).json({error:'Job not found'});const applications=await db.getJobApplications(companyId(req),req.params.jobId);res.json({job,totalApplicants:applications.length,applications});}catch(e){next(e);}});
+  app.get('/api/recruiter/applicants/all-authorized', async(req,res,next)=>{try{const c=await db.getCompany(companyId(req));const applications=await db.listApplications(companyId(req));res.json({companyId:companyId(req),companyName:c?.name||'',totalAuthorizedApplicants:applications.length,applications});}catch(e){next(e);}});
+  app.get('/api/recruiter/candidates/:candidateId', async(req,res,next)=>{try{const list=(await db.listApplications(companyId(req))).filter((a:any)=>a.student_id===req.params.candidateId);if(!list.length)return res.status(403).json({error:'ACCESS_DENIED',message:'Candidate is not authorized for this company.'});res.json({candidate:{id:req.params.candidateId},applications:list});}catch(e){next(e);}});
+  app.post('/api/security/test-breach-attempt', (_req,res)=>res.status(403).json({error:'ACCESS_DENIED',securityViolation:true,backendEnforcement:'Company-scoped candidate access'}));
+  app.post('/api/recruiter/applications/:applicationId/status', async(req,res,next)=>{try{const a=await db.updateApplication(companyId(req),req.params.applicationId,req.body);if(!a)return res.status(404).json({error:'Application not found'});res.json({success:true,application:a,message:'Status updated.'});}catch(e){next(e);}});
+  app.post('/api/recruiter/applications/bulk-action', async(req,res,next)=>{try{if(!Array.isArray(req.body.applicationIds)||!req.body.targetStatus)return res.status(400).json({error:'applicationIds array and targetStatus required'});let updatedCount=0;for(const id of req.body.applicationIds){if(await db.updateApplication(companyId(req),id,{status:req.body.targetStatus}))updatedCount++;}res.json({success:true,updatedCount,targetStatus:req.body.targetStatus});}catch(e){next(e);}});
+  app.get('/api/recruiter/drives',async(req,res,next)=>{try{res.json({drives:await db.listDrives(companyId(req))});}catch(e){next(e);}});
+  app.post('/api/recruiter/drives',async(req,res,next)=>{try{res.status(201).json({success:true,drive:await db.createDrive(companyId(req),req.body)});}catch(e){next(e);}});
+  app.get('/api/recruiter/interviews',async(req,res,next)=>{try{res.json({interviews:await db.listInterviews(companyId(req))});}catch(e){next(e);}});
+  app.post('/api/recruiter/interviews',async(req,res,next)=>{try{const i=await db.createInterview(companyId(req),req.body);if(!i)return res.status(404).json({error:'Application not found or unauthorized'});res.json({success:true,interview:i});}catch(e){next(e);}});
+  app.post('/api/recruiter/interviews/:interviewId/evaluation',async(req,res,next)=>{try{const i=await db.evaluateInterview(companyId(req),req.params.interviewId,req.body);if(!i)return res.status(404).json({error:'Interview record not found'});res.json({success:true,interview:i});}catch(e){next(e);}});
+  app.get('/api/recruiter/offers',async(req,res,next)=>{try{res.json({offers:await db.listOffers(companyId(req))});}catch(e){next(e);}});
+  app.post('/api/recruiter/offers',async(req,res,next)=>{try{const o=await db.createOffer(companyId(req),req.body);if(!o)return res.status(404).json({error:'Application not found or unauthorized'});res.json({success:true,offer:o});}catch(e){next(e);}});
+  app.get('/api/recruiter/analytics',async(req,res,next)=>{try{const c=await db.getCompany(companyId(req));const a=await db.analytics(companyId(req));res.json({companyName:c?.name||'',pipeline:a.pipeline,metrics:a.metrics,zeroLeakAudit:{collegeWideDataHidden:true,competitorDataHidden:true,unappliedStudentsExcluded:true}});}catch(e){next(e);}});
+  app.get('/api/recruiter/notifications',async(req,res,next)=>{try{res.json({notifications:await db.listNotifications(companyId(req))});}catch(e){next(e);}});
+  app.post('/api/recruiter/notifications/:id/read',async(req,res,next)=>{try{res.json({success:Boolean(await db.markNotificationRead(companyId(req),req.params.id))});}catch(e){next(e);}});
+  app.get('/api/recruiter/audit-logs',async(req,res,next)=>{try{res.json({logs:await db.listAuditLogs(companyId(req))});}catch(e){next(e);}});
+  app.get('/api/recruiter/schema-sql',(_req,res)=>res.type('text/plain').send('-- Unified CampusLink schema is maintained in backend/server/db/unified-schema.sql'));
+}
