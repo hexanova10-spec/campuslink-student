@@ -69,12 +69,12 @@ export const TpoDashboard: React.FC<TpoDashboardProps> = ({ onSelectScreen }) =>
   });
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-12">
+    <div className="tpo-dashboard space-y-6 sm:space-y-8 pb-12">
       {/* =====================================================================
           1. COMMAND CENTER HERO (Section 9 & 19)
           ===================================================================== */}
       <section
-        className="hero-command-center rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xl relative overflow-hidden transition-colors"
+        className="tpo-dashboard-hero rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xl relative overflow-hidden transition-colors"
         aria-label="Command Center Hero"
       >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">

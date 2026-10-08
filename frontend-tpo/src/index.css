@@ -553,3 +553,37 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
 }
+
+
+/* TPO dashboard — align the command center with the Student/Recruiter royal-blue workspace */
+.tpo-dashboard-hero {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 52%, #4338ca 100%) !important;
+  border: 1px solid rgba(147,197,253,.45) !important;
+  color: #fff !important;
+  box-shadow: 0 18px 42px -18px rgba(37,99,235,.42) !important;
+}
+.tpo-dashboard-hero h1,
+.tpo-dashboard-hero p,
+.tpo-dashboard-hero .metric-val {
+  color: #fff !important;
+}
+.tpo-dashboard-hero p { color: #dbeafe !important; }
+.tpo-dashboard-hero .hero-secondary-btn {
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.28) !important;
+  color: #fff !important;
+  backdrop-filter: blur(12px);
+}
+.tpo-dashboard-hero .hero-secondary-btn:hover {
+  background: rgba(255,255,255,.22) !important;
+}
+[data-theme="dark"] .tpo-dashboard-hero {
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 48%, #0f172a 100%) !important;
+}
+.tpo-dashboard .bg-slate-900 {
+  border-radius: 1.5rem;
+}
+.tpo-dashboard .bg-slate-950/60 {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}

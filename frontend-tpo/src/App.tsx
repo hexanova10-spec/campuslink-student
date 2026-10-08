@@ -182,7 +182,12 @@ function MainAppContent() {
       />
 
       {/* Main Body Layout */}
-      <div className="flex-1 flex relative">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 left-1/4 w-96 h-96 rounded-full bg-blue-100/60 opacity-70 blur-[120px]" />
+        <div className="absolute top-1/2 -right-20 w-96 h-96 rounded-full bg-blue-50/80 opacity-60 blur-[140px]" />
+      </div>
+
+      <div className="flex-1 flex relative z-10">
         <Sidebar
           currentScreen={currentScreen}
           onSelectScreen={setCurrentScreen}
