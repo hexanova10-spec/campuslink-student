@@ -3,7 +3,7 @@ const RECRUITER_TOKEN_KEY = 'campuslink_recruiter_jwt';
 async function ensureRecruiterToken(): Promise<string> {
   const existing = localStorage.getItem(RECRUITER_TOKEN_KEY);
   if (existing) return existing;
-  const res = await fetchRecruiter('/api/recruiter/auth/dev-session', {
+  const res = await fetch('/api/recruiter/auth/dev-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ recruiterId: 'recruiter-apex-1', companyId: 'company-apex' })
