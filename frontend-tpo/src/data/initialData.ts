@@ -228,9 +228,6 @@ const EXPANDED_TPO_STUDENTS: Student[] = Array.from({ length: 125 }, (_, i) => {
   } as Student;
 });
 
-INITIAL_STUDENTS.unshift(SIDDHARTH_TPO_PROFILE);
-INITIAL_STUDENTS.push(...EXPANDED_TPO_STUDENTS);
-
 export const INITIAL_COMPANIES: Company[] = [
   {
     id: 'comp-google',
@@ -740,6 +737,11 @@ export const INITIAL_STUDENTS: Student[] = [
     placedPackageLPA: 50.0
   }
 ];
+
+
+INITIAL_STUDENTS.unshift(SIDDHARTH_TPO_PROFILE);
+INITIAL_STUDENTS.push(...EXPANDED_TPO_STUDENTS);
+
 
 export const INITIAL_JOBS: Job[] = [
   {
