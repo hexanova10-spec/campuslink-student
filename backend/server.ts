@@ -1039,44 +1039,36 @@ app.post('/api/student/offers/:id/decision', authenticateStudent, async (req: Au
 });
 
 // ---------------------------------------------------------
-// 22. DOCUMENTS LOCKER
 // ---------------------------------------------------------
-app.get('/api/student/documents', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-  res.json(data.documents);
-});
-
-app.post('/api/student/documents/upload', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  const { title, documentType, fileUrl } = req.body;
-  if (!title || !documentType) return res.status(400).json({ error: 'Title and document type are required' });
-
-  const newDoc = {
-    id: `doc-${Date.now()}`,
-    student_id: data.student.id,
-    title,
-    document_type: documentType,
-    file_url: fileUrl || `/documents/${encodeURIComponent(title)}.pdf`,
-    verification_status: 'Pending Verification' as const,
-    uploaded_at: new Date().toISOString()
-  };
-
-  data.documents.unshift(newDoc);
-  res.status(201).json({ message: 'Document uploaded for verification', document: newDoc });
-});
-
-app.delete('/api/student/documents/:id', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
-  if (!data) return res.status(404).json({ error: 'Student not found' });
-
-  data.documents = data.documents.filter(d => d.id !== req.params.id);
-  res.json({ message: 'Document deleted' });
-});
-
+// 22. DOCUMENTS LOCKER — PostgreSQL-backed student/TPO shared vault
 // ---------------------------------------------------------
+app.get('/api/student/documents', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const student = await unifiedStudentByEmail(req.user!.email);
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+    const r = await query('SELECT id,student_id,title,document_type,file_url,verification_status,uploaded_at,rejection_notes FROM documents WHERE student_id=$1 ORDER BY uploaded_at DESC',[student.id]);
+    return res.json(r.rows);
+  } catch (e:any) { return res.status(500).json({ error: e.message || 'Unable to load documents' }); }
+});
+app.post('/api/student/documents/upload', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const student = await unifiedStudentByEmail(req.user!.email);
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+    const { title, documentType, fileUrl, fileName, fileSizeBytes } = req.body;
+    if (!title || !documentType || !fileUrl) return res.status(400).json({ error: 'Title, document type and file are required' });
+    if (typeof fileUrl === 'string' && fileUrl.length > 14 * 1024 * 1024) return res.status(413).json({ error: 'File is too large for the CampusLink demo vault' });
+    const r = await query('INSERT INTO documents (student_id,title,document_type,file_url,verification_status) VALUES ($1,$2,$3,$4,$5) RETURNING *',[student.id,title,documentType,fileUrl,'Pending Verification']);
+    return res.status(201).json({ message:'Document uploaded for TPO verification', document:r.rows[0], fileName:fileName||title, fileSizeBytes:Number(fileSizeBytes||0) });
+  } catch (e:any) { return res.status(500).json({ error:e.message||'Document upload failed' }); }
+});
+app.delete('/api/student/documents/:id', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const student = await unifiedStudentByEmail(req.user!.email);
+    if (!student) return res.status(404).json({ error:'Student not found' });
+    await query('DELETE FROM documents WHERE id=$1 AND student_id=$2',[req.params.id,student.id]);
+    return res.json({ message:'Document deleted' });
+  } catch (e:any) { return res.status(500).json({ error:e.message||'Document delete failed' }); }
+});
 // 23. NOTIFICATIONS
 // ---------------------------------------------------------
 app.get('/api/student/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
