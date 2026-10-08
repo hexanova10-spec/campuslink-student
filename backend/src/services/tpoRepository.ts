@@ -14,3 +14,6 @@ export async function offers(){return (await query(`SELECT ro.*,s.full_name AS "
 export async function auditLogs(){return (await query('SELECT * FROM audit_logs ORDER BY created_at DESC')).rows;}
 
 export async function documents(){return (await query(`SELECT d.id,d.student_id AS "studentId",s.full_name AS "studentName",s.roll_number AS "rollNumber",d.title,d.document_type AS "documentType",d.file_url AS "fileUrl",d.verification_status AS status,d.uploaded_at AS "uploadedAt",d.rejection_notes AS "rejectionReason" FROM documents d JOIN students s ON s.id=d.student_id ORDER BY d.uploaded_at DESC`)).rows;}
+
+export async function profile(tpoId:string){const r=await query('SELECT id,name,email,phone,department,bio,avatar_url AS "avatarUrl",institution_id AS "institutionId" FROM tpo_users WHERE id=$1',[tpoId]);return r.rows[0]||null;}
+export async function updateProfile(tpoId:string,b:any){const r=await query(`UPDATE tpo_users SET name=COALESCE($2,name),email=COALESCE($3,email),phone=COALESCE($4,phone),department=COALESCE($5,department),bio=COALESCE($6,bio),avatar_url=COALESCE($7,avatar_url),updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING id,name,email,phone,department,bio,avatar_url AS "avatarUrl",institution_id AS "institutionId"`,[tpoId,b.name,b.email,b.phone,b.department,b.bio,b.avatarUrl]);return r.rows[0]||null;}
