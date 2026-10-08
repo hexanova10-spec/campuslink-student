@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldCheck, ExternalLink } from 'lucide-react';
 import { repo } from '../../services/storage';
 import { PlacementDocument, VerificationStatus } from '../../types';
 
@@ -90,7 +90,9 @@ export const DocumentsScreen: React.FC = () => {
                   </td>
                   <td className="py-3 px-4 text-right">
                     {doc.status === 'PENDING' ? (
-                      <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2">
+                      {doc.fileUrl && <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300 font-semibold inline-flex items-center gap-1"><ExternalLink className="w-3 h-3"/>View</a>}
+
                         <button
                           onClick={() => {
                             setRejectModalDoc(doc);
