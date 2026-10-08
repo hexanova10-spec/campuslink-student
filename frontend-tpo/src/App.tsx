@@ -182,16 +182,14 @@ function MainAppContent() {
       />
 
       {/* Main Body Layout */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Slide-over Collapsible Sidebar Drawer (only opens when requested!) */}
+      <div className="flex-1 flex relative">
         <Sidebar
           currentScreen={currentScreen}
           onSelectScreen={setCurrentScreen}
         />
 
-        {/* Dynamic Screen Viewport: Maximizes data density and screen space */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-w-full">
+          <div className="tpo-page-shell">
             {renderActiveScreen()}
           </div>
         </main>
