@@ -101,7 +101,14 @@ export const api = {
   async getSession() {
     try {
       const res = await fetchRecruiter('/api/recruiter/session');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const session = await res.json();
+        // Keep the local demo fallback aligned with the active company selected by the backend.
+        if (session.recruiter?.id && localRecruiters.some((r) => r.id === session.recruiter.id)) {
+          localRecruiterId = session.recruiter.id;
+        }
+        return session;
+      }
     } catch (e) {
       // Fallback to local
     }
@@ -186,7 +193,12 @@ export const api = {
   async getAllAuthorizedApplicants() {
     try {
       const res = await fetchRecruiter('/api/recruiter/applicants/all-authorized');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        // In local development, an empty backend seed should not hide the matching authorized demo roster.
+        // Never merge demo applicants into production responses.
+        if (!import.meta.env.DEV || (data.applications?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
