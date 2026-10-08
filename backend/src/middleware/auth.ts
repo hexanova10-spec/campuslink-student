@@ -10,6 +10,8 @@ export interface CampusUser {
   studentId?: string;
   recruiterId?: string;
   tpoId?: string;
+  companyId?: string;
+  institutionId?: string;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -33,6 +35,8 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
       studentId: decoded.studentId,
       recruiterId: decoded.recruiterId,
       tpoId: decoded.tpoId,
+      companyId: (decoded as any).companyId,
+      institutionId: (decoded as any).institutionId,
     };
     next();
   } catch {
