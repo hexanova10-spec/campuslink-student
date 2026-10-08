@@ -87,10 +87,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
 
   return (
     <header
-      className={`h-16 sticky top-0 z-40 flex items-center justify-between px-3 sm:px-4 lg:px-6 transition-colors duration-200 border-b ${
+      className={`h-16 sticky top-0 z-40 px-3 sm:px-6 py-2.5 flex items-center justify-between transition-colors duration-200 border-b backdrop-blur-xl ${
         isDark
-          ? 'bg-[#0B1530]/95 border-[#1E3A6B] text-[#F8FAFC] backdrop-blur-xl shadow-lg shadow-black/30'
-          : 'bg-white/95 border-[#D9E2F2] text-[#101A3A] backdrop-blur-xl shadow-xs'
+          ? 'bg-slate-950/70 border-white/10 text-white shadow-md'
+          : 'bg-white/80 border-slate-200/80 text-slate-900 shadow-sm shadow-blue-900/5'
       }`}
     >
       {/* =====================================================================
