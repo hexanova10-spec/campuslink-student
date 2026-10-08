@@ -3,6 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend-student",
+    "frontend-recruiter",
+    "frontend-tpo"
+  ],
   "scripts": {
     "dev": "concurrently \"npm:dev:backend\" \"npm:dev:student\" \"npm:dev:recruiter\" \"npm:dev:tpo\"",
     "dev:backend": "tsx backend/src/index.ts",
