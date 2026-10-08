@@ -68,7 +68,7 @@ import {
   INITIAL_AUDIT_LOGS
 } from '../data/initialData';
 
-const STORAGE_KEY = 'campuslink_tpo_state_v1';
+const STORAGE_KEY = 'campuslink_tpo_state_v2';
 
 export interface StorageState {
   institutions: Institution[];
