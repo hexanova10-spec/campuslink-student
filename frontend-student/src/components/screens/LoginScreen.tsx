@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Sparkles, AlertCircle, Sun, Moon } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
-  const { login, setCurrentScreen } = useAuth();
+  const { login, loginAsDemoStudent, setCurrentScreen } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -112,6 +112,26 @@ export const LoginScreen: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setError(null);
+              setLoading(true);
+              try {
+                await loginAsDemoStudent();
+              } catch (err: any) {
+                setError(err.message || 'Demo login failed. Please start the backend first.');
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-300 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all disabled:opacity-50"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{loading ? 'Opening Demo...' : 'Continue with Demo Student'}</span>
+          </button>
 
           <div className="mt-5 text-center">
             <p className="text-xs text-slate-600 dark:text-slate-400">
