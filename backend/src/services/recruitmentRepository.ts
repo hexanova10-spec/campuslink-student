@@ -117,3 +117,6 @@ export async function studentOfferDecision(studentId:string, offerId:string, dec
   await query(`INSERT INTO notifications_global (user_id,company_id,title,message,category,action_route) SELECT u.id,$2,$3,$4,'placement','applications' FROM users u WHERE u.id=(SELECT user_id FROM students WHERE id=$1)`,[studentId,offer.company_id,next==='ACCEPTED'?'Offer accepted. Your placement is confirmed.':'Offer declined.']);
   return {offer:updated};
 }
+
+export async function getRecruiterProfile(recruiterId:string,companyId:string){const r=await query('SELECT id,company_id AS "companyId",name,designation,avatar_url AS "avatarUrl" FROM recruiters WHERE id=$1 AND company_id=$2',[recruiterId,companyId]);return r.rows[0]||null;}
+export async function updateRecruiterProfile(recruiterId:string,companyId:string,b:any){const r=await query('UPDATE recruiters SET name=COALESCE($3,name),designation=COALESCE($4,designation),avatar_url=COALESCE($5,avatar_url) WHERE id=$1 AND company_id=$2 RETURNING id,company_id AS "companyId",name,designation,avatar_url AS "avatarUrl"',[recruiterId,companyId,b.name,b.designation,b.avatarUrl]);return r.rows[0]||null;}
