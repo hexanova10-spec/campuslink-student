@@ -4,9 +4,13 @@ import { databaseHealth } from './config/db.js';
 import { registerRecruiterRoutes } from './routes/recruiter.js';
 import { registerTpoRoutes } from './routes/tpo.js';
 import { registerAiRoutes } from './routes/ai.js';
+import { authenticate } from './middleware/auth.js';
+import { requireRole } from './middleware/role.js';
 
 dotenv.config();
 
+app.use('/api/recruiter', authenticate, requireRole('RECRUITER'));
+app.use('/api/tpo', authenticate, requireRole('TPO'));
 registerRecruiterRoutes(app);
 registerTpoRoutes(app);
 registerAiRoutes(app);
