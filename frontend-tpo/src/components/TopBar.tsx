@@ -102,38 +102,47 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
           onClick={toggleSidebar}
           aria-label="Toggle navigation menu"
           className={`px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 font-semibold text-xs border cursor-pointer ${
-            isDark
-              ? 'bg-[#101C3A] hover:bg-[#15244A] text-blue-300 border-[#1E3A6B]'
-              : 'bg-[#F8FAFF] hover:bg-[#EFF6FF] text-[#3155E7] border-[#D9E2F2]'
+            isSidebarOpen
+              ? 'bg-blue-600 border-blue-600 text-white shadow-blue-500/20'
+              : isDark
+                ? 'bg-slate-900/80 border-white/10 text-slate-200 hover:border-blue-500/50 hover:text-white'
+                : 'bg-white/80 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
           }`}
           title={isSidebarOpen ? 'Close Menu' : 'Open Menu'}
         >
           {isSidebarOpen ? (
             <>
-              <X className="w-4 h-4 text-[#3155E7]" />
-              <span className="hidden sm:inline text-xs font-semibold">Close</span>
+              <X className="w-4 h-4 text-inherit" />
+              <span className="hidden sm:inline">Close Menu</span>
             </>
           ) : (
             <>
               <Menu className="w-4 h-4 text-[#3155E7]" />
-              <span className="hidden sm:inline text-xs font-semibold">Menu</span>
+              <span className="hidden sm:inline">Menu</span>
             </>
           )}
         </button>
 
-        {/* Brand Lockup */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-600/30 text-white shrink-0">
-            <Building2 className="w-5 h-5" />
+        {/* CampusLink Brand Lockup — shared with Student & Recruiter */}
+        <div className="flex items-center gap-2.5 cursor-default group">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-600/30 group-hover:scale-105 transition-transform shrink-0">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
-          <div className="hidden xs:block">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className={`font-black text-xs sm:text-sm tracking-tight ${isDark ? 'text-white' : 'text-[#101A3A]'}`}>
-                CAMPUSLINK
+          <div className="hidden sm:block">
+            <div className="flex items-center gap-2 leading-none">
+              <span className={`font-extrabold tracking-tight text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                CAMPUS<span className="text-blue-600">LINK</span>
+              </span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold border uppercase ${
+                isDark
+                  ? 'bg-blue-600/20 border-blue-400/30 text-blue-300'
+                  : 'bg-blue-50 border-blue-200 text-blue-700'
+              }`}>
+                TPO
               </span>
             </div>
-            <p className={`text-[10px] font-medium leading-none mt-1 hidden sm:block ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
-              Placement Operations & Intelligence
+            <p className={`text-[10px] uppercase tracking-widest font-mono mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Placement Workspace
             </p>
           </div>
         </div>
