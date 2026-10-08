@@ -123,8 +123,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onSelectScreen, openPalette }) =
 
         {/* Brand Lockup */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#3155E7] flex items-center justify-center shadow-md shadow-[#3155E7]/30 text-white font-black text-xs sm:text-sm tracking-wider shrink-0 text-white-force">
-            CL
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-600/30 text-white shrink-0">
+            <Building2 className="w-5 h-5" />
           </div>
           <div className="hidden xs:block">
             <div className="flex items-center gap-1.5 leading-none">
