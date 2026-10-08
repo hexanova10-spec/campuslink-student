@@ -158,3 +158,14 @@ CREATE INDEX IF NOT EXISTS idx_applications_company ON recruitment_applications(
 CREATE INDEX IF NOT EXISTS idx_applications_student ON recruitment_applications(student_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_company ON recruitment_interviews(company_id);
 CREATE INDEX IF NOT EXISTS idx_offers_student ON recruitment_offers(student_id);
+
+
+CREATE TABLE IF NOT EXISTS tpo_users (
+  id VARCHAR(100) PRIMARY KEY,
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  institution_id VARCHAR(100) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_recruiters_user ON recruiters(user_id);
+CREATE INDEX IF NOT EXISTS idx_tpo_users_user ON tpo_users(user_id);
