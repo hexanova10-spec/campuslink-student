@@ -64,3 +64,32 @@ export async function listNotifications(companyId:string){const r=await query('S
 export async function markNotificationRead(companyId:string,id:string){const r=await query('UPDATE notifications_global SET is_read=true WHERE company_id=$1 AND id=$2 RETURNING *',[companyId,id]);return r.rows[0]||null;}
 export async function listAuditLogs(companyId:string){const r=await query('SELECT * FROM audit_logs WHERE company_id=$1 ORDER BY created_at DESC',[companyId]);return r.rows;}
 export async function analytics(companyId:string){const r=await query(`SELECT status,count(*)::int AS count FROM recruitment_applications WHERE company_id=$1 GROUP BY status`,[companyId]);const j=await query('SELECT count(*)::int AS count FROM jobs WHERE company_id=$1 AND status=\'ACTIVE\'',[companyId]);const i=await query(`SELECT count(*) FILTER (WHERE status='COMPLETED')::int AS completed,count(*) FILTER (WHERE status='SCHEDULED')::int AS upcoming FROM recruitment_interviews WHERE company_id=$1`,[companyId]);return {pipeline:Object.fromEntries(r.rows.map((x:any)=>[x.status,x.count])),metrics:{activeJobs:j.rows[0].count,interviewsCompleted:i.rows[0].completed,upcomingInterviews:i.rows[0].upcoming}};}
+
+
+export async function createStudentApplication(studentId:string, jobId:string) {
+  const job = await query(`SELECT j.*, c.name AS company_name FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id=$1 AND j.status='ACTIVE'`,[jobId]);
+  if (!job.rows[0]) return { error: 'JOB_NOT_FOUND' as const };
+  const j:any = job.rows[0];
+  const student = await query(`SELECT s.*, sa.cgpa, sa.active_backlogs FROM students s LEFT JOIN student_academics sa ON sa.student_id=s.id WHERE s.id=$1`,[studentId]);
+  if (!student.rows[0]) return { error: 'STUDENT_NOT_FOUND' as const };
+  const s:any=student.rows[0];
+  if (j.min_cgpa != null && Number(s.cgpa||0) < Number(j.min_cgpa)) return { error:'INELIGIBLE_CGPA' as const, required:Number(j.min_cgpa), actual:Number(s.cgpa||0) };
+  if (j.max_backlogs_allowed != null && Number(s.active_backlogs||0) > Number(j.max_backlogs_allowed)) return { error:'INELIGIBLE_BACKLOGS' as const };
+  if (Array.isArray(j.eligible_branches) && j.eligible_branches.length && !j.eligible_branches.includes(s.branch)) return { error:'INELIGIBLE_BRANCH' as const };
+  if (j.graduation_year != null && Number(s.graduation_year) !== Number(j.graduation_year)) return { error:'INELIGIBLE_GRADUATION_YEAR' as const };
+  try {
+    const r=await query(`INSERT INTO recruitment_applications (student_id,job_id,company_id,status) VALUES ($1,$2,$3,'APPLIED') RETURNING *`,[studentId,j.id,j.company_id]);
+    return { application:r.rows[0], job:j };
+  } catch(e:any) {
+    if(e?.code==='23505') return { error:'ALREADY_APPLIED' as const };
+    throw e;
+  }
+}
+export async function listStudentApplications(studentId:string) {
+  const r=await query(`SELECT ra.*, c.name AS company_name, j.title AS role_title, j.ctc_min_lpa, j.ctc_max_lpa, j.location, j.status AS job_status FROM recruitment_applications ra JOIN companies c ON c.id=ra.company_id JOIN jobs j ON j.id=ra.job_id WHERE ra.student_id=$1 ORDER BY ra.applied_at DESC`,[studentId]);
+  return r.rows;
+}
+export async function withdrawStudentApplication(studentId:string,id:string) {
+  const r=await query(`DELETE FROM recruitment_applications WHERE id=$1 AND student_id=$2 AND status IN ('APPLIED','UNDER_REVIEW','SHORTLISTED') RETURNING *`,[id,studentId]);
+  return r.rows[0]||null;
+}
