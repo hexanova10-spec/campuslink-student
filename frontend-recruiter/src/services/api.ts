@@ -158,68 +158,23 @@ export const api = {
 
   // Jobs
   async getJobs() {
-    try {
-      const res = await fetchRecruiter('/api/recruiter/jobs');
-      if (res.ok) return await res.json();
-    } catch (e) {}
-
-    const company = getLocalCompany();
-    const companyJobs = localJobs.filter((j) => j.companyId === company.id);
-    const enriched = companyJobs.map((job) => {
-      const jobApps = localApplications.filter((a) => a.jobId === job.id);
-      return {
-        ...job,
-        stats: {
-          totalApplicants: jobApps.length,
-          shortlisted: jobApps.filter((a) => a.status === 'SHORTLISTED').length,
-          interviews: jobApps.filter((a) => a.status === 'INTERVIEW').length,
-          selected: jobApps.filter((a) => a.status === 'SELECTED' || a.status === 'OFFERED').length
-        }
-      };
-    });
-    return { jobs: enriched };
-  },
+    const res = await fetchRecruiter('/api/recruiter/jobs');
+    if (!res.ok) throw new Error('Unable to load recruiter jobs from the shared CampusLink backend.');
+    return await res.json();
+  }
 
   async createJob(jobData: Partial<JobRequisition>) {
-    try {
-      const res = await fetchRecruiter('/api/recruiter/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(jobData)
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {}
-
-    const company = getLocalCompany();
-    const newJob: JobRequisition = {
-      id: `job-${company.id.split('-')[1]}-${Date.now().toString(36)}`,
-      companyId: company.id,
-      title: jobData.title || 'New Job',
-      department: jobData.department || 'Engineering',
-      description: jobData.description || '',
-      responsibilities: jobData.responsibilities || [],
-      requiredSkills: jobData.requiredSkills || [],
-      preferredSkills: jobData.preferredSkills || [],
-      minCgpa: jobData.minCgpa || 7.5,
-      eligibleBranches: jobData.eligibleBranches || ['Computer Science'],
-      graduationYear: jobData.graduationYear || 2027,
-      maxBacklogsAllowed: jobData.maxBacklogsAllowed || 0,
-      experienceLevel: jobData.experienceLevel || 'Fresher',
-      requiredCertifications: jobData.requiredCertifications || [],
-      ctcMinLpa: jobData.ctcMinLpa || 14.0,
-      ctcMaxLpa: jobData.ctcMaxLpa || 20.0,
-      ctcBreakdown: jobData.ctcBreakdown || '',
-      location: jobData.location || 'Bengaluru',
-      workMode: jobData.workMode || 'Hybrid',
-      openings: jobData.openings || 5,
-      deadline: jobData.deadline || '2026-11-30',
-      status: 'ACTIVE',
-      createdAt: new Date().toISOString()
-    };
-    localJobs.unshift(newJob);
-    addLocalAudit('JOB_CREATED', 'JOB', newJob.id, `Created job: ${newJob.title}`);
-    return { success: true, job: newJob };
-  },
+    const res = await fetchRecruiter('/api/recruiter/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jobData)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Unable to create job in the shared CampusLink backend.');
+    }
+    return await res.json();
+  }
 
   // Applicants & Candidate Dossier
   async getAllAuthorizedApplicants() {
