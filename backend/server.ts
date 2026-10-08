@@ -1190,28 +1190,19 @@ app.get('/api/db/schema', (req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------
-// Mount Vite Middleware (Dev) or Static Assets (Prod)
+// Shared API health check
 // ---------------------------------------------------------
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req: Request, res: Response) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-    });
-  }
-
-  app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`[CampusLink Student] Server active on port ${PORT}`);
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({
+    ok: true,
+    service: 'campuslink-backend',
+    port: Number(PORT),
+    timestamp: new Date().toISOString(),
   });
-}
+});
 
-startServer().catch(err => {
-  console.error('Failed to start server:', err);
+// API-only process. The three Vite frontends run independently on
+// ports 3001/3002/3003 and proxy /api requests to this service.
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log('[CampusLink Backend] API active on port ' + PORT);
 });
