@@ -200,14 +200,14 @@ export const Header: React.FC = () => {
 
         {/* Recruiter Profile Card */}
         <div
-          onClick={() => setActiveScreen('login')}
+          onClick={() => setActiveScreen('company_profile')}
           className={`flex items-center gap-2 pl-2 border-l cursor-pointer group ${
             isLight ? 'border-slate-200' : 'border-white/10'
           }`}
         >
-          <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=async()=>{await api.updateCompanyProfile({logoUrl:String(r.result)} as any);await refreshData()};r.readAsDataURL(f)}} />
+          <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=async()=>{await api.updateRecruiterProfile({avatarUrl:String(r.result)});await refreshData()};r.readAsDataURL(f)}} />
           <img
-            onClick={()=>avatarInput.current?.click()}
+            onClick={(e)=>{e.stopPropagation();avatarInput.current?.click()}}
             src={recruiter?.avatarUrl || company?.logoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120'}
             alt={recruiter?.name}
             className="w-8 h-8 rounded-full object-cover border-2 border-blue-500/40 group-hover:border-blue-500 transition-colors"
