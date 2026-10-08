@@ -2,14 +2,16 @@ import type { Express } from 'express';
 import * as db from '../services/recruitmentRepository.js';
 
 const defaultCompany = process.env.DEFAULT_RECRUITER_COMPANY_ID || 'company-apex';
+const identity = (req:any) => req.user;
+const scopedCompany = (req:any) => identity(req)?.companyId || (process.env.NODE_ENV !== 'production' ? (req.header('x-campus-company-id') || defaultCompany) : null);
 
 export function registerRecruiterRoutes(app: Express) {
-  const companyId = (req:any) => req.header('x-campus-company-id') || defaultCompany;
+  const companyId = (req:any) => scopedCompany(req);
 
-  app.get('/api/recruiter/session', async (req,res,next) => { try { const c=await db.getCompany(companyId(req)); if(!c)return res.status(404).json({error:'Company not found'}); res.json({recruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter',designation:'Campus Recruiter',avatarUrl:''},company:c,availableRecruiters:[]}); } catch(e){next(e);} });
-  app.post('/api/recruiter/switch-session', async (req,res,next) => { try { const c=await db.getCompany(req.body.companyId||companyId(req)); if(!c)return res.status(404).json({error:'Company not found'}); res.json({success:true,currentRecruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter'},company:c}); } catch(e){next(e);} });
+  app.get('/api/recruiter/session', async (req,res,next) => { try { const scope=companyId(req); if(!scope)return res.status(403).json({error:'Recruiter company scope is missing'}); const c=await db.getCompany(scope); if(!c)return res.status(404).json({error:'Company not found'}); res.json({recruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter',designation:'Campus Recruiter',avatarUrl:''},company:c,availableRecruiters:[]}); } catch(e){next(e);} });
+  app.post('/api/recruiter/switch-session', async (req,res,next) => { try { const scope=companyId(req); if(req.body.companyId && req.body.companyId!==scope)return res.status(403).json({error:'Cannot switch outside authenticated company'}); const c=await db.getCompany(scope); if(!c)return res.status(404).json({error:'Company not found'}); res.json({success:true,currentRecruiter:{id:'db-session',companyId:c.id,name:'Campus Recruiter'},company:c}); } catch(e){next(e);} });
   app.put('/api/recruiter/company-profile', async (req,res,next)=>{try{const c=await db.updateCompany(companyId(req),req.body);res.json({success:true,company:c});}catch(e){next(e);}});
-  app.get('/api/recruiter/jobs', async(req,res,next)=>{try{res.json({jobs:await db.listJobs(companyId(req))});}catch(e){next(e);}});
+  app.get('/api/recruiter/jobs', async(req,res,next)=>{try{const scope=companyId(req);if(!scope)return res.status(403).json({error:'Recruiter company scope is missing'});res.json({jobs:await db.listJobs(scope)});}catch(e){next(e);}});
   app.post('/api/recruiter/jobs', async(req,res,next)=>{try{if(!req.body.title||!req.body.description)return res.status(400).json({error:'Title and description are required'});res.json({success:true,job:await db.createJob(companyId(req),req.body)});}catch(e){next(e);}});
   app.get('/api/recruiter/jobs/:jobId/applications', async(req,res,next)=>{try{const jobs=await db.listJobs(companyId(req));const job=jobs.find((j:any)=>j.id===req.params.jobId);if(!job)return res.status(404).json({error:'Job not found'});const applications=await db.getJobApplications(companyId(req),req.params.jobId);res.json({job,totalApplicants:applications.length,applications});}catch(e){next(e);}});
   app.get('/api/recruiter/applicants/all-authorized', async(req,res,next)=>{try{const c=await db.getCompany(companyId(req));const applications=await db.listApplications(companyId(req));res.json({companyId:companyId(req),companyName:c?.name||'',totalAuthorizedApplicants:applications.length,applications});}catch(e){next(e);}});
