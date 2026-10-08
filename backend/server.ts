@@ -98,11 +98,19 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
       graduationYear: Number(graduationYear) || 2026
     });
 
-    const unifiedStudentId = await ensureUnifiedStudent(studentData);
+    // Keep local/demo registration working before PostgreSQL is configured.
+    // If the shared database is available, synchronize the account into it.
+    let unifiedStudentId = studentData.student.id;
+    try {
+      unifiedStudentId = await ensureUnifiedStudent(studentData);
+    } catch (dbError) {
+      console.warn('[CampusLink DB] Student registration sync skipped:', dbError instanceof Error ? dbError.message : dbError);
+    }
+
     const token = jwt.sign(
       {
         userId: studentData.user.id,
-        studentId: studentData.student.id,
+        studentId: unifiedStudentId,
         email: studentData.user.email
       },
       JWT_SECRET,
