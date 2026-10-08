@@ -128,30 +128,22 @@ const ODIA_CITIES = ['Bhubaneswar','Cuttack','Rourkela','Berhampur','Puri','Samb
 const ODIA_BRANCHES = ['CSE','IT','ECE','EEE','MECH','Data Science'];
 const ODIA_SKILLS = [['React','TypeScript','SQL'],['Python','FastAPI','PostgreSQL'],['Java','Spring Boot','DSA'],['C++','System Design','Linux'],['AWS','Docker','Kubernetes'],['Python','Machine Learning','Pandas'],['Embedded C','IoT','Verilog']];
 
-INITIAL_USERS.push(
-  ...['Abhijit Behera','Rudranarayan Nayak','Sambit Pradhan','Sourav Jena','Subham Rout','Soumya Barik','Debasish Samal','Debasmita Swain','Sasmita Das','Pratik Panda','Pranab Patnaik','Pratyush Maharana'].map((name,i) => ({
-    id: `user-tpo-odia-${i+1}`,
-    name,
-    email: `${name.toLowerCase().replace(/\\s+/g,'.')}@campuslink.edu`,
-    role: 'COLLEGE_TPO' as const,
-    institutionId: ['inst-apex-01','inst-metro-02','inst-horizon-03'][i % 3],
-    campusId: ['Main City Campus','South Tech Campus','Cyberabad Campus'][i % 3],
-    avatar: `https://i.pravatar.cc/150?img=${20+i}`,
+const TPO_DEMO_USERS: User[] = [
+  {
+    id: 'user-tpo-horizon',
+    name: 'Prof. Vikram Saxena',
+    email: 'tpo.horizon@campuslink.edu',
+    role: 'COLLEGE_TPO',
+    institutionId: 'inst-horizon-03',
+    campusId: 'Cyberabad Campus',
+    avatar: 'https://i.pravatar.cc/150?img=20',
     department: 'Training & Placement Cell',
     lastLogin: '2026-10-08T10:00:00Z',
-    status: 'ACTIVE' as const
-  })),
-  ...['Ronali Mohanty','Abhijit Sahoo','Rudranarayan Pani','Sasmita Behera','Pratyush Nayak','Debasmita Pradhan'].map((name,i) => ({
-    id: `user-admin-odia-${i+1}`,
-    name,
-    email: `admin.${name.toLowerCase().replace(/\\s+/g,'.')}@campuslink.edu`,
-    role: 'SYSTEM_ADMIN' as const,
-    avatar: `https://i.pravatar.cc/150?img=${45+i}`,
-    department: 'Global Platform Administration',
-    lastLogin: '2026-10-08T10:00:00Z',
-    status: 'ACTIVE' as const
-  }))
-);
+    status: 'ACTIVE'
+  }
+];
+
+INITIAL_USERS.push(...TPO_DEMO_USERS);
 
 const SIDDHARTH_TPO_PROFILE: Student = {
   id: 'stu-siddharth-das',
