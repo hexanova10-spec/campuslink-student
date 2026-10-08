@@ -140,6 +140,12 @@ export const api = {
     return { success: true, currentRecruiter: r, company: getLocalCompany() };
   },
 
+  async updateRecruiterProfile(data: { name?: string; designation?: string; avatarUrl?: string }) {
+    const res = await fetchRecruiter('/api/recruiter/profile', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    if (!res.ok) throw new Error('Unable to update recruiter profile');
+    return await res.json();
+  },
+
   async updateCompanyProfile(data: Partial<Company>) {
     try {
       const res = await fetchRecruiter('/api/recruiter/company-profile', {
