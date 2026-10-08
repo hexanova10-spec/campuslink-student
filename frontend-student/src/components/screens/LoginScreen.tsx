@@ -4,10 +4,10 @@ import { useTheme } from '../../context/ThemeContext';
 import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Sparkles, AlertCircle, Sun, Moon } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
-  const { login, setCurrentScreen, loginAsDemoStudent } = useAuth();
+  const { login, setCurrentScreen } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const [email, setEmail] = useState('aarav.sharma@campus.edu');
-  const [password, setPassword] = useState('student@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -112,21 +112,6 @@ export const LoginScreen: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Quick Demo Login Option */}
-          <div className="mt-6 pt-6 border-t border-blue-100 dark:border-slate-800">
-            <div className="text-center mb-3">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Reviewing the prototype?</span>
-            </div>
-            <button
-              onClick={() => loginAsDemoStudent()}
-              type="button"
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-50 dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-slate-800 border border-blue-200/80 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-semibold transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Instant 1-Click Demo Login (Aarav Sharma)</span>
-            </button>
-          </div>
 
           <div className="mt-5 text-center">
             <p className="text-xs text-slate-600 dark:text-slate-400">
