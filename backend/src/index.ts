@@ -12,6 +12,18 @@ dotenv.config();
 
 // Development-only recruiter session bootstrap. Production authentication must come from the real identity provider.
 if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/tpo/auth/dev-session', (req, res) => {
+    const tpoId = req.body?.tpoId || 'user-tpo-apex';
+    const institutionId = req.body?.institutionId || 'campuslink';
+    const token = jwt.sign(
+      { userId: tpoId, tpoId, institutionId, email: `${tpoId}@campuslink.local`, role: 'TPO' },
+      process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026',
+      { expiresIn: '8h' }
+    );
+    res.json({ token, tpoId, institutionId });
+  });
+
+if (process.env.NODE_ENV !== 'production') {
   app.post('/api/recruiter/auth/dev-session', (req, res) => {
     const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
     const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
