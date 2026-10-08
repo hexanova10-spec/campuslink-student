@@ -35,6 +35,7 @@ export const CreateJobScreen: React.FC = () => {
   const [deadline, setDeadline] = useState('2026-11-20');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (parsedJD) {
@@ -52,6 +53,7 @@ export const CreateJobScreen: React.FC = () => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
+      setErrorMsg(null);
       const payload = {
         title,
         department,
@@ -81,8 +83,9 @@ export const CreateJobScreen: React.FC = () => {
         setSuccessMsg(false);
         setActiveScreen('jobs');
       }, 1200);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create job:', err);
+      setErrorMsg(err?.message || 'Unable to publish the requisition. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -421,6 +424,12 @@ export const CreateJobScreen: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">
+          {errorMsg && (
+            <span className="text-xs font-bold text-red-700 flex items-center gap-1 max-w-xl">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" /> {errorMsg}
+            </span>
+          )}
+
           {successMsg && (
             <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Requisition Published Successfully!
