@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useRef} from 'react';
 import {
   Building2,
   Bell,
@@ -11,6 +11,7 @@ import {
   PanelLeft
 } from 'lucide-react';
 import { useRecruiter } from '../context/RecruiterContext.tsx';
+import { api } from '../services/api.ts';
 
 export const Header: React.FC = () => {
   const {
@@ -29,6 +30,7 @@ export const Header: React.FC = () => {
   } = useRecruiter();
 
   const isLight = theme === 'light';
+  const avatarInput = useRef<HTMLInputElement>(null);
 
   return (
     <header
@@ -203,8 +205,10 @@ export const Header: React.FC = () => {
             isLight ? 'border-slate-200' : 'border-white/10'
           }`}
         >
+          <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=async()=>{await api.updateCompanyProfile({logoUrl:String(r.result)} as any);await refreshData()};r.readAsDataURL(f)}} />
           <img
-            src={recruiter?.avatarUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120'}
+            onClick={()=>avatarInput.current?.click()}
+            src={recruiter?.avatarUrl || company?.logoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120'}
             alt={recruiter?.name}
             className="w-8 h-8 rounded-full object-cover border-2 border-blue-500/40 group-hover:border-blue-500 transition-colors"
           />
