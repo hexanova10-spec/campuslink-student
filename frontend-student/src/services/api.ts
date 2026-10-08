@@ -50,10 +50,22 @@ export const api = {
       headers,
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Server error occurred');
+    const raw = await response.text();
+    let data: any = null;
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      data = null;
     }
+
+    if (!response.ok) {
+      throw new Error(data?.error || raw || `Server error (${response.status})`);
+    }
+
+    if (data === null) {
+      throw new Error('Server returned an empty or invalid JSON response.');
+    }
+
     return data as T;
   },
 
