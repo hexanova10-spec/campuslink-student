@@ -37,7 +37,8 @@ export const DashboardScreen: React.FC = () => {
   const openJobsCount = jobs.filter((j) => j.status === 'ACTIVE').length;
   const activeDrivesCount = drives.length;
   const authorizedApplicantsCount = applications.length;
-  const aiShortlistCount = applications.filter((a) => (a.aiMatchScore || 0) >= 80).length;
+  const aiShortlistCount = applications.filter((a) => a.student && (a.aiMatchScore ?? 0) >= 80).length;
+  const rankedApplications = [...applications].filter((app) => app.student).sort((a, b) => (b.aiMatchScore ?? 0) - (a.aiMatchScore ?? 0));
   const upcomingInterviewsCount = interviews.filter((i) => i.status === 'SCHEDULED').length;
   const pendingOffersCount = offers.filter((o) => o.status === 'ISSUED').length;
   const pendingActionsCount =
@@ -107,10 +108,19 @@ export const DashboardScreen: React.FC = () => {
               </span>
             </div>
             <p className="text-sm font-semibold text-white mt-1">
-              &quot;42 eligible applicants are available for Software Engineer. 13 have a match score above 80%.&quot;
+              {applications.length > 0
+                ? `"${applications.filter((app) => app.student && (app.status === 'APPLIED' || app.status === 'UNDER REVIEW' || app.status === 'SHORTLISTED' || app.status === 'INTERVIEW')).length} authorized applicants are in the active pipeline for ${applications[0]?.jobTitle || 'your open roles'}. ${applications.filter((app) => (app.aiMatchScore ?? 0) >= 80).length} have a recorded match score of 80% or higher."`
+                : '"No authorized applications are currently available. Refresh data or verify the recruiter session and backend connection."'}
             </p>
             <p className="text-xs text-blue-100 mt-0.5">
-              Top candidate <strong className="text-white underline">Rahul Verma (94% match)</strong> demonstrates direct alignment with high-throughput backend technologies.
+              {applications.length > 0
+                ? (() => {
+                    const top = [...applications].filter((app) => app.student).sort((a, b) => (b.aiMatchScore ?? 0) - (a.aiMatchScore ?? 0))[0];
+                    return top
+                      ? `Top authorized candidate ${top.student.fullName} (${top.aiMatchScore ?? 0}% recorded match) — ${top.jobTitle || 'application'}.`
+                      : 'Applications are loaded, but candidate profiles are not available for this company scope.';
+                  })()
+                : 'Only candidates authorized for your company can appear in this workspace.'}
             </p>
           </div>
           <button
@@ -238,7 +248,7 @@ export const DashboardScreen: React.FC = () => {
           </div>
 
           <div className={`divide-y ${isLight ? 'divide-slate-200/80' : 'divide-white/10'}`}>
-            {applications.slice(0, 4).map((app, idx) => (
+            {rankedApplications.slice(0, 4).map((app, idx) => (
               <div
                 key={app.id}
                 className={`py-3.5 flex items-center justify-between gap-4 px-2 rounded-xl transition-colors ${
@@ -276,7 +286,7 @@ export const DashboardScreen: React.FC = () => {
                             : 'bg-slate-800 text-slate-300 border-slate-700'
                         }`}
                       >
-                        CGPA {app.student?.cgpa || '8.5'}
+                        CGPA {app.student?.cgpa ?? '—'}
                       </span>
                     </div>
                     <p className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -288,7 +298,7 @@ export const DashboardScreen: React.FC = () => {
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
                     <span className="text-sm font-black text-emerald-500 font-mono">
-                      {app.aiMatchScore || 85}%
+                      {app.aiMatchScore ?? 0}%
                     </span>
                     <p className={`text-[10px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                       {app.aiRecommendation || 'Recommended'}
@@ -304,6 +314,18 @@ export const DashboardScreen: React.FC = () => {
                 </div>
               </div>
             ))}
+            {rankedApplications.length === 0 && (
+              <div className={`py-10 text-center text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                {applications.length === 0
+                  ? 'No authorized applications loaded. Use Refresh in the header, then verify the active company session and backend API.'
+                  : 'Applications are present, but no authorized student profiles could be loaded.'}
+                <div className="mt-3">
+                  <button onClick={() => setActiveScreen('applicants')} className="text-xs font-bold text-blue-500 hover:text-blue-600">
+                    Open applicant workspace
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
