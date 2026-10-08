@@ -724,10 +724,45 @@ app.get('/api/student/jobs', authenticateStudent, async (req: AuthenticatedReque
   res.json(jobs.map((j:any)=>{const reqSkills=j.required_skills||[],matched=reqSkills.filter((x:string)=>skills.has(x.toLowerCase())),app=appMap.get(j.id);const eligible=Number(academic.cgpa)>=Number(j.min_cgpa||0)&&Number(academic.active_backlogs)<=Number(j.max_backlogs_allowed||0)&&(!j.eligible_branches?.length||j.eligible_branches.includes(s.branch))&&(!j.graduation_year||Number(j.graduation_year)===Number(s.graduation_year));return {...j,companyName:j.company_name,role_title:j.title,company_name:j.company_name,ctc:j.ctc_max_lpa?((j.ctc_min_lpa||j.ctc_max_lpa)+'-'+j.ctc_max_lpa+' LPA'):'',allowed_branches:j.eligible_branches||[],required_skills:reqSkills,min_cgpa:Number(j.min_cgpa||0),max_backlogs:Number(j.max_backlogs_allowed||0),matchPercentage:Math.round((matched.length/Math.max(1,reqSkills.length))*100),isEligible:eligible,isApplied:Boolean(app),applicationStatus:app?.status||null};}));
 });
 app.get('/api/student/jobs/:id', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  const s=await unifiedStudentById(req.user!.studentId); if(!s)return res.status(404).json({error:'Student not found'});
-  const j=(await query("SELECT j.*,c.name AS company_name FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id=$1 AND j.status='ACTIVE'",[req.params.id])).rows[0]; if(!j)return res.status(404).json({error:'Job drive not found'});
-  const skills=new Set((await query('SELECT LOWER(skill_name) AS skill_name FROM student_skills WHERE student_id=$1',[s.id])).rows.map((x:any)=>x.skill_name));const reqSkills=j.required_skills||[],matchedSkills=reqSkills.filter((x:string)=>skills.has(x.toLowerCase())),missingSkills=reqSkills.filter((x:string)=>!skills.has(x.toLowerCase()));const application=(await query('SELECT * FROM recruitment_applications WHERE student_id=$1 AND job_id=$2 LIMIT 1',[s.id,j.id])).rows[0]||null;
-  res.json({...j,companyName:j.company_name,role_title:j.title,matchedSkills,missingSkills,isApplied:Boolean(application),application});
+  const s=await unifiedStudentById(req.user!.studentId);
+  if(!s)return res.status(404).json({error:'Student not found'});
+
+  const j=(await query("SELECT j.*,c.name AS company_name FROM jobs j JOIN companies c ON c.id=j.company_id WHERE j.id=$1 AND j.status='ACTIVE'",[req.params.id])).rows[0];
+  if(!j)return res.status(404).json({error:'Job drive not found'});
+
+  const academics=(await query('SELECT cgpa, active_backlogs FROM student_academics WHERE student_id=$1 ORDER BY updated_at DESC LIMIT 1',[s.id])).rows[0]||{};
+  const skills=new Set((await query('SELECT LOWER(skill_name) AS skill_name FROM student_skills WHERE student_id=$1',[s.id])).rows.map((x:any)=>x.skill_name));
+  const reqSkills=j.required_skills||[];
+  const matchedSkills=reqSkills.filter((x:string)=>skills.has(x.toLowerCase()));
+  const missingSkills=reqSkills.filter((x:string)=>!skills.has(x.toLowerCase()));
+  const isEligible =
+    (j.min_cgpa == null || Number(academics.cgpa||0) >= Number(j.min_cgpa)) &&
+    (j.max_backlogs_allowed == null || Number(academics.active_backlogs||0) <= Number(j.max_backlogs_allowed)) &&
+    (!Array.isArray(j.eligible_branches) || !j.eligible_branches.length || j.eligible_branches.includes(s.branch)) &&
+    (j.graduation_year == null || Number(s.graduation_year) === Number(j.graduation_year));
+  const application=(await query('SELECT * FROM recruitment_applications WHERE student_id=$1 AND job_id=$2 LIMIT 1',[s.id,j.id])).rows[0]||null;
+
+  res.json({
+    ...j,
+    companyName:j.company_name,
+    company_name:j.company_name,
+    role_title:j.title,
+    ctc:j.ctc_max_lpa ? ((j.ctc_min_lpa||j.ctc_max_lpa)+'-'+j.ctc_max_lpa+' LPA') : '',
+    location:j.location||'',
+    min_cgpa:Number(j.min_cgpa||0),
+    max_backlogs:Number(j.max_backlogs_allowed||0),
+    allowed_branches:j.eligible_branches||[],
+    required_skills:reqSkills,
+    preferred_skills:j.preferred_skills||[],
+    selection_rounds:Array.isArray(j.selection_rounds)?j.selection_rounds:[],
+    application_deadline:j.deadline||'',
+    matchedSkills,
+    missingSkills,
+    isEligible,
+    isApplied:Boolean(application),
+    applicationStatus:application?.status||null,
+    application
+  });
 });
 // AI Job Description Analysis Endpoint
 // Authenticates student from JWT, retrieves student profile & selected job, evaluates with Gemini
