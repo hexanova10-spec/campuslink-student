@@ -44,3 +44,12 @@ The three original repositories remain intact and are referenced as Git submodul
 - `backend/server/db/unified-schema.sql` — shared recruitment/TPO PostgreSQL schema
 
 The recruiter and TPO endpoints are now served by the same process as the student API. PostgreSQL is introduced as the shared persistence boundary; current route implementations retain seeded in-memory compatibility while database migration is rolled out incrementally.
+
+
+### Database migration order
+1. Run `backend/server/db/schema.sql`.
+2. Run `backend/server/db/unified-schema.sql`.
+3. For development/demo data, run `backend/server/db/seed-unified.sql`.
+4. Set `DATABASE_URL` and start the backend with `npm run dev:backend`.
+
+Recruiter and TPO route modules now call PostgreSQL repositories; route-local seeded arrays have been removed from the unified backend.
