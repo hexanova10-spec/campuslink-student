@@ -22,6 +22,7 @@ export async function query<T = any>(text: string, params: unknown[] = []) {
 }
 
 export async function databaseHealth() {
+  if (!process.env.DATABASE_URL) return false;
   try {
     const result = await pool.query('SELECT 1 AS ok');
     return result.rows[0]?.ok === 1;
