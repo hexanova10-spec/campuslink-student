@@ -156,6 +156,16 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Student profile not found for this account' });
   }
 
+  // Canonical CampusLink demo student identity.
+  if (user.email === 'aarav.sharma@campus.edu') {
+    studentData.student.full_name = 'Siddharth Das';
+    studentData.student.college_name = 'KIIT University, Bhubaneswar';
+    studentData.student.mobile = '+91 98765 43210';
+    studentData.student.bio = 'Final-year Computer Science student from Bhubaneswar focused on full-stack engineering, scalable systems, cloud technologies, and campus placement readiness.';
+    studentData.student.preferred_locations = ['Bhubaneswar', 'Bangalore', 'Hyderabad', 'Pune', 'Remote'];
+    studentData.student.avatar_url = studentData.student.avatar_url || '';
+  }
+
   // Keep demo/local authentication usable even when PostgreSQL is not configured yet.
   // When the shared database is available, use the unified student id so all modules share one record.
   let unifiedStudentId = studentData.student.id;
@@ -210,6 +220,10 @@ app.post('/api/auth/reset-password', (req: Request, res: Response) => {
 // Current Authenticated User & Student Check
 app.get('/api/auth/me', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   const s=await unifiedStudentByEmail(req.user!.email); if(!s)return res.status(404).json({error:'Student record not found'});
+  if (req.user!.email === 'aarav.sharma@campus.edu') {
+    await query(`UPDATE students SET full_name='Siddharth Das', college_name='KIIT University, Bhubaneswar', mobile='+91 98765 43210', bio='Final-year Computer Science student from Bhubaneswar focused on full-stack engineering, scalable systems, cloud technologies, and campus placement readiness.', preferred_locations=ARRAY['Bhubaneswar','Bangalore','Hyderabad','Pune','Remote'], updated_at=CURRENT_TIMESTAMP WHERE id=$1`, [s.id]);
+    s.full_name='Siddharth Das'; s.college_name='KIIT University, Bhubaneswar'; s.mobile='+91 98765 43210'; s.bio='Final-year Computer Science student from Bhubaneswar focused on full-stack engineering, scalable systems, cloud technologies, and campus placement readiness.'; s.preferred_locations=['Bhubaneswar','Bangalore','Hyderabad','Pune','Remote'];
+  }
   const student={id:s.id,user_id:s.user_id,roll_number:s.roll_number,full_name:s.full_name,mobile:s.mobile,college_name:s.college_name,branch:s.branch,degree:s.degree,graduation_year:s.graduation_year,current_semester:s.current_semester,avatar_url:s.avatar_url,bio:s.bio,target_role:s.target_role,preferred_locations:s.preferred_locations,onboarding_completed:s.onboarding_completed,updated_at:s.updated_at};
   res.json({user:{id:s.user_id,email:s.email},student,onboardingCompleted:Boolean(s.onboarding_completed)});
 });
