@@ -10,7 +10,7 @@ import { requireRole } from './middleware/role.js';
 
 dotenv.config();
 
-// Development-only recruiter session bootstrap. Production authentication must come from the real identity provider.
+// Development-only session bootstraps. Production authentication must come from the real identity provider.
 if (process.env.NODE_ENV !== 'production') {
   app.post('/api/tpo/auth/dev-session', (req, res) => {
     const tpoId = req.body?.tpoId || 'user-tpo-apex';
@@ -23,11 +23,14 @@ if (process.env.NODE_ENV !== 'production') {
     res.json({ token, tpoId, institutionId });
   });
 
-if (process.env.NODE_ENV !== 'production') {
   app.post('/api/recruiter/auth/dev-session', (req, res) => {
     const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
     const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
-    const token = jwt.sign({ userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, role: 'RECRUITER' }, process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026', { expiresIn: '8h' });
+    const token = jwt.sign(
+      { userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, role: 'RECRUITER' },
+      process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026',
+      { expiresIn: '8h' }
+    );
     res.json({ token, recruiterId, companyId });
   });
 }
@@ -42,7 +45,7 @@ const PORT = Number(process.env.PORT || 5000);
 
 app.get('/api/system/health', async (_req, res) => {
   const database = await databaseHealth();
-  res.json({ ok: true, service: 'campuslink-backend', database, roles: ['STUDENT','RECRUITER','TPO'], port: PORT, timestamp: new Date().toISOString() });
+  res.json({ ok: true, service: 'campuslink-backend', database, roles: ['STUDENT', 'RECRUITER', 'TPO'], port: PORT, timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
