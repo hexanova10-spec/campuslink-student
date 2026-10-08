@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import recruiterRouter from './recruiterRoutes';
 import { mockDb, MASTER_JOBS, ROLE_SKILL_REQUIREMENTS } from './server/services/mockDb';
 import {
   parseResumeWithGemini,
@@ -23,6 +24,10 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026';
 
 app.use(express.json({ limit: '15mb' }));
+
+// Shared recruiter API surface. Student routes remain in this server for now;
+// recruiter state will be moved behind the common database layer in the next migration.
+app.use(recruiterRouter);
 
 // ---------------------------------------------------------
 // JWT Authorization Middleware
