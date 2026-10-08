@@ -75,6 +75,16 @@ function authenticateStudent(req: AuthenticatedRequest, res: Response, next: Nex
   }
 }
 
+function legacyStudentFor(req: AuthenticatedRequest) {
+  const direct = legacyStudentFor(req);
+  if (direct) return direct;
+  if (req.user?.email) {
+    const user = mockDb.getUserByEmail(req.user.email);
+    if (user) return mockDb.getStudentByUserId(user.id);
+  }
+  return null;
+}
+
 // ---------------------------------------------------------
 // 1. AUTHENTICATION ROUTES
 // ---------------------------------------------------------
@@ -208,7 +218,7 @@ app.get('/api/auth/me', authenticateStudent, async (req: AuthenticatedRequest, r
 // 2. STUDENT ONBOARDING (10 STEPS)
 // ---------------------------------------------------------
 app.post('/api/student/onboarding', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const {
@@ -318,7 +328,7 @@ app.post('/api/student/onboarding', authenticateStudent, (req: AuthenticatedRequ
 // ---------------------------------------------------------
 app.get('/api/student/dashboard', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   // The JWT carries the unified PostgreSQL student UUID. The legacy dashboard data is keyed by the mock user/student IDs, so resolve the legacy record by email first.
-  let data = mockDb.getStudentById(req.user!.studentId);
+  let data = legacyStudentFor(req);
   if (!data && req.user?.email) {
     const legacyUser = mockDb.getUserByEmail(req.user.email);
     if (legacyUser) data = mockDb.getStudentByUserId(legacyUser.id);
@@ -425,13 +435,13 @@ app.put('/api/student/profile', authenticateStudent, async (req: AuthenticatedRe
 // 5. ACADEMIC PROFILE
 // ---------------------------------------------------------
 app.get('/api/student/academics', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.academics);
 });
 
 app.put('/api/student/academics', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { cgpa, activeBacklogs, clearedBacklogs, tenthPercentage, twelfthPercentage, semesterGrades } = req.body;
@@ -456,13 +466,13 @@ app.put('/api/student/academics', authenticateStudent, (req: AuthenticatedReques
 // 6. SKILLS
 // ---------------------------------------------------------
 app.get('/api/student/skills', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.skills);
 });
 
 app.post('/api/student/skills', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { skillName, category, proficiencyLevel, yearsExperience } = req.body;
@@ -499,7 +509,7 @@ app.post('/api/student/skills', authenticateStudent, (req: AuthenticatedRequest,
 });
 
 app.delete('/api/student/skills/:id', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   data.skills = data.skills.filter(s => s.id !== req.params.id);
@@ -518,13 +528,13 @@ app.delete('/api/student/skills/:id', authenticateStudent, (req: AuthenticatedRe
 // 7. PROJECTS
 // ---------------------------------------------------------
 app.get('/api/student/projects', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.projects);
 });
 
 app.post('/api/student/projects', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { title, description, techStack, githubUrl, liveDemoUrl, highlightMetric } = req.body;
@@ -554,7 +564,7 @@ app.post('/api/student/projects', authenticateStudent, (req: AuthenticatedReques
 });
 
 app.delete('/api/student/projects/:id', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   data.projects = data.projects.filter(p => p.id !== req.params.id);
@@ -567,13 +577,13 @@ app.delete('/api/student/projects/:id', authenticateStudent, (req: Authenticated
 // 8. CERTIFICATIONS & EXPERIENCES
 // ---------------------------------------------------------
 app.get('/api/student/certifications', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.certifications);
 });
 
 app.post('/api/student/certifications', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { name, issuingOrganization, issueDate, credentialId, credentialUrl } = req.body;
@@ -594,7 +604,7 @@ app.post('/api/student/certifications', authenticateStudent, (req: Authenticated
 });
 
 app.delete('/api/student/certifications/:id', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   data.certifications = data.certifications.filter(c => c.id !== req.params.id);
   mockDb.recalculateReadiness(data.student.id);
@@ -605,7 +615,7 @@ app.delete('/api/student/certifications/:id', authenticateStudent, (req: Authent
 // 9. RESUME MODULE & AI RESUME PARSER
 // ---------------------------------------------------------
 app.get('/api/student/resume', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.resume);
 });
@@ -625,7 +635,7 @@ app.post('/api/student/resume/parse', authenticateStudent, async (req: Authentic
 });
 
 app.post('/api/student/resume/apply-parsed-data', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { parsedData, fileName } = req.body;
@@ -676,13 +686,13 @@ app.post('/api/student/resume/apply-parsed-data', authenticateStudent, (req: Aut
 // 10 & 11. READINESS SCORE & EXPLANATION
 // ---------------------------------------------------------
 app.get('/api/student/readiness', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.readinessScore);
 });
 
 app.post('/api/student/readiness/recalculate', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const updated = mockDb.recalculateReadiness(data.student.id);
@@ -693,7 +703,7 @@ app.post('/api/student/readiness/recalculate', authenticateStudent, (req: Authen
 // 12. SKILL GAP ANALYSIS
 // ---------------------------------------------------------
 app.get('/api/student/skill-gap', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json({
     skillGap: data.skillGap,
@@ -702,7 +712,7 @@ app.get('/api/student/skill-gap', authenticateStudent, (req: AuthenticatedReques
 });
 
 app.post('/api/student/skill-gap/target-role', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { targetRole } = req.body;
@@ -768,7 +778,7 @@ app.get('/api/student/jobs/:id', authenticateStudent, async (req: AuthenticatedR
 // Authenticates student from JWT, retrieves student profile & selected job, evaluates with Gemini
 app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const data = mockDb.getStudentById(req.user!.studentId);
+    const data = legacyStudentFor(req);
     if (!data) {
       return res.status(404).json({ error: 'Student profile not found' });
     }
@@ -795,14 +805,14 @@ app.post('/api/student/jobs/:jobId/analyze', authenticateStudent, async (req: Au
 // ---------------------------------------------------------
 app.get('/api/student/applications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await listStudentApplications((await unifiedStudentByEmail(req.user!.email))?.id || ''); if (unified.length) return res.json(unified); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.applications);
 });
 
 app.post('/api/student/applications/apply', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await createStudentApplication((await unifiedStudentByEmail(req.user!.email))?.id || '', req.body.jobId); if (!unified.error) { const j:any = unified.job; return res.status(201).json({ message: 'Application submitted successfully', application: { ...unified.application, company_name: j.company_name, role_title: j.title, ctc: j.ctc_max_lpa ? ((j.ctc_min_lpa || j.ctc_max_lpa) + '-' + j.ctc_max_lpa + ' LPA') : '', location: j.location || '', allow_withdrawal: true } }); } if (unified.error === 'ALREADY_APPLIED') return res.status(400).json({ error: 'You have already applied for this placement drive' }); if (unified.error === 'JOB_NOT_FOUND') return res.status(404).json({ error: 'Job drive not found' }); if (unified.error === 'INELIGIBLE_CGPA' || unified.error === 'INELIGIBLE_BACKLOGS' || unified.error === 'INELIGIBLE_BRANCH' || unified.error === 'INELIGIBLE_GRADUATION_YEAR') return res.status(400).json({ error: unified.error }); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { jobId } = req.body;
@@ -847,7 +857,7 @@ app.post('/api/student/applications/apply', authenticateStudent, async (req: Aut
 
 app.post('/api/student/applications/:id/withdraw', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await withdrawStudentApplication((await unifiedStudentByEmail(req.user!.email))?.id || '', req.params.id); if (unified) return res.json({ message: 'Application successfully withdrawn' }); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const appIndex = data.applications.findIndex(a => a.id === req.params.id);
@@ -871,7 +881,7 @@ app.get('/api/student/unified/notifications', authenticateStudent, async (req: A
 // ---------------------------------------------------------
 app.get('/api/student/interviews', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await studentInterviews(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.interviews);
 });
@@ -880,7 +890,7 @@ app.get('/api/student/interviews', authenticateStudent, async (req: Authenticate
 // 18. AI MOCK INTERVIEW
 // ---------------------------------------------------------
 app.get('/api/student/mock-interviews', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.mockInterviews);
 });
@@ -901,7 +911,7 @@ app.post('/api/student/mock-interviews/generate-question', authenticateStudent, 
 });
 
 app.post('/api/student/mock-interviews/evaluate', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   try {
@@ -947,13 +957,13 @@ app.post('/api/student/mock-interviews/evaluate', authenticateStudent, async (re
 // 19 & 20. AI CAREER COACH & CHAT SECURITY
 // ---------------------------------------------------------
 app.get('/api/student/ai/messages', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.messages);
 });
 
 app.post('/api/student/ai/chat', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   const { message } = req.body;
@@ -1013,7 +1023,7 @@ app.post('/api/student/ai/chat', authenticateStudent, async (req: AuthenticatedR
 // ---------------------------------------------------------
 app.get('/api/student/offers', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await studentOffers(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.offers);
 });
@@ -1026,7 +1036,7 @@ app.post('/api/student/offers/:id/decision', authenticateStudent, async (req: Au
     if (unified.error === 'INVALID_DECISION') return res.status(400).json({ error: 'Decision must be ACCEPTED or DECLINED' });
     if (unified.error === 'OFFER_ALREADY_DECIDED') return res.status(400).json({ error: `Offer already marked as ${unified.status}` });
   } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   const { decision } = req.body;
   const offer = data.offers.find(o => o.id === req.params.id);
@@ -1073,14 +1083,14 @@ app.delete('/api/student/documents/:id', authenticateStudent, async (req: Authen
 // ---------------------------------------------------------
 app.get('/api/student/notifications', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await studentNotifications(req.user!.studentId); if (unified.length) return res.json(unified); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   res.json(data.notifications);
 });
 
 app.post('/api/student/notifications/:id/read', authenticateStudent, async (req: AuthenticatedRequest, res: Response) => {
   try { const unified = await markStudentNotificationRead((await unifiedStudentByEmail(req.user!.email))?.id || '', req.params.id); if (unified) return res.json({ message: 'Marked as read', notification: unified }); } catch {}
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
   const notif = data.notifications.find(n => n.id === req.params.id);
   if (notif) notif.is_read = true;
@@ -1088,7 +1098,7 @@ app.post('/api/student/notifications/:id/read', authenticateStudent, async (req:
 });
 
 app.post('/api/student/notifications/read-all', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   data.notifications.forEach(n => { n.is_read = true; });
@@ -1099,7 +1109,7 @@ app.post('/api/student/notifications/read-all', authenticateStudent, (req: Authe
 // 24. PERSONAL ANALYTICS (STUDENT-ONLY)
 // ---------------------------------------------------------
 app.get('/api/student/analytics', authenticateStudent, (req: AuthenticatedRequest, res: Response) => {
-  const data = mockDb.getStudentById(req.user!.studentId);
+  const data = legacyStudentFor(req);
   if (!data) return res.status(404).json({ error: 'Student not found' });
 
   // Historical readiness score trend simulation
