@@ -10,5 +10,5 @@ export async function queryCreateDrive(b:any){const r=await query(`INSERT INTO p
 export async function updateJob(id:string,status:string,notes?:string){const r=await query('UPDATE jobs SET status=$2 WHERE id=$1 RETURNING *',[id,status]);return r.rows[0]||null;}
 export async function updateStudentRisk(id:string,b:any){return (await query('SELECT id,full_name AS "fullName",branch FROM students WHERE id=$1',[id])).rows[0]||null;}
 export async function interviews(){return (await query('SELECT * FROM recruitment_interviews ORDER BY created_at DESC')).rows;}
-export async function offers(){return (await query('SELECT * FROM recruitment_offers ORDER BY created_at DESC')).rows;}
+export async function offers(){return (await query(`SELECT ro.*,s.full_name AS "studentName",c.name AS "companyName",j.title AS "jobTitle",ra.status AS "applicationStatus" FROM recruitment_offers ro JOIN students s ON s.id=ro.student_id JOIN companies c ON c.id=ro.company_id LEFT JOIN jobs j ON j.id=ro.job_id LEFT JOIN recruitment_applications ra ON ra.id=ro.application_id ORDER BY ro.created_at DESC`)).rows;}
 export async function auditLogs(){return (await query('SELECT * FROM audit_logs ORDER BY created_at DESC')).rows;}
