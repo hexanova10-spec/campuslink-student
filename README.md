@@ -30,7 +30,7 @@ Install root dependencies, configure `backend/.env`, then run `npm run dev`.
 
 Backend health check: `GET http://localhost:5000/api/health`.
 
-The three original repositories remain intact and are referenced as Git submodules. Frontend proxy/port changes are maintained in their respective repositories.
+The three role frontends live directly in this monorepo. Their Vite dev servers run on ports 3001/3002/3003 and proxy `/api/*` to the shared backend on port 5000.
 
 ## Unified backend architecture
 
