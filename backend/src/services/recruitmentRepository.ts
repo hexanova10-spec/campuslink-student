@@ -93,3 +93,7 @@ export async function withdrawStudentApplication(studentId:string,id:string) {
   const r=await query(`DELETE FROM recruitment_applications WHERE id=$1 AND student_id=$2 AND status IN ('APPLIED','UNDER_REVIEW','SHORTLISTED') RETURNING *`,[id,studentId]);
   return r.rows[0]||null;
 }
+
+export async function studentInterviews(studentId:string){ return (await query(`SELECT ri.*,c.name AS company_name,j.title AS role_title FROM recruitment_interviews ri JOIN companies c ON c.id=ri.company_id LEFT JOIN jobs j ON j.id=ri.job_id WHERE ri.student_id=$1 ORDER BY ri.scheduled_time ASC NULLS LAST`,[studentId])).rows; }
+export async function studentOffers(studentId:string){ return (await query(`SELECT ro.*,c.name AS company_name,j.title AS job_title FROM recruitment_offers ro JOIN companies c ON c.id=ro.company_id LEFT JOIN jobs j ON j.id=ro.job_id WHERE ro.student_id=$1 ORDER BY ro.created_at DESC`,[studentId])).rows; }
+export async function studentNotifications(studentId:string){ return (await query(`SELECT ng.* FROM notifications_global ng JOIN users u ON u.id=ng.user_id JOIN students s ON s.user_id=u.id WHERE s.id=$1 ORDER BY ng.created_at DESC`,[studentId])).rows; }
