@@ -34,9 +34,15 @@ if (process.env.NODE_ENV !== 'production') {
     res.json({ token, tpoId, institutionId });
   });
 
-  app.post('/api/recruiter/auth/dev-session', (req, res) => {
+  app.post('/api/recruiter/auth/dev-session', async (req, res) => {
     const recruiterId = req.body?.recruiterId || 'recruiter-apex-1';
     const companyId = req.body?.companyId || (recruiterId === 'recruiter-nova-1' ? 'company-nova' : 'company-apex');
+    try {
+      await query('INSERT INTO recruiters (id,company_id,name,designation) VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,company_id=EXCLUDED.company_id',
+        [recruiterId,companyId,'Rajashree Sahoo','Campus Recruiter']);
+    } catch (error) {
+      console.warn('[CampusLink DB] Recruiter profile bootstrap skipped:', error instanceof Error ? error.message : error);
+    }
     const token = jwt.sign(
       { userId: recruiterId, recruiterId, companyId, email: `${recruiterId}@campuslink.local`, name: 'Rajashree Sahoo', role: 'RECRUITER' },
       process.env.JWT_SECRET || 'campuslink-student-jwt-secret-2026',
