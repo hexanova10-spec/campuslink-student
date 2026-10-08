@@ -53,8 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await loginAsDemoStudent();
         }
       } else {
-        // Automatically sign in as default pre-seeded student for seamless instant exploration
-        await loginAsDemoStudent();
+        // Real accounts only: users must sign in or create their own student account.
       }
       setIsLoading(false);
     }
