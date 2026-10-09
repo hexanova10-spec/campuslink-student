@@ -18,7 +18,9 @@
     "build": "npm run build:student && npm run build:recruiter && npm run build:tpo",
     "build:student": "vite build --config frontend-student/vite.config.ts",
     "build:recruiter": "vite build --config frontend-recruiter/vite.config.ts",
-    "build:tpo": "vite build --config frontend-tpo/vite.config.ts"
+    "build:tpo": "vite build --config frontend-tpo/vite.config.ts",
+    "start": "npm run start:backend",
+    "start:backend": "npm --workspace backend run start"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
