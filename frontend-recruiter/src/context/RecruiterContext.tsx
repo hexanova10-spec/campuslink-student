@@ -148,16 +148,32 @@ export const RecruiterProvider: React.FC<{ children: ReactNode }> = ({ children 
       setCompany(sessionData.company);
       setAvailableRecruiters(sessionData.availableRecruiters);
 
-      const [jobsData, appsData, intvsData, offersData, drivesData, notifsData, logsData] =
-        await Promise.all([
-          api.getJobs(),
-          api.getAllAuthorizedApplicants(),
-          api.getInterviews(),
-          api.getOffers(),
-          api.getDrives(),
-          api.getNotifications(),
-          api.getAuditLogs()
-        ]);
+      // Load each workspace section independently. A single unavailable backend endpoint
+      // must not prevent the rest of the recruiter dashboard from rendering its data.
+      const results = await Promise.allSettled([
+        api.getJobs(),
+        api.getAllAuthorizedApplicants(),
+        api.getInterviews(),
+        api.getOffers(),
+        api.getDrives(),
+        api.getNotifications(),
+        api.getAuditLogs()
+      ]);
+
+      const readResult = <T,>(index: number, fallback: T): T => {
+        const result = results[index];
+        if (result.status === 'fulfilled') return result.value as T;
+        console.error('Recruiter workspace section failed to load:', index, result.reason);
+        return fallback;
+      };
+
+      const jobsData = readResult(0, { jobs: [] as any[] });
+      const appsData = readResult(1, { applications: [] as any[] });
+      const intvsData = readResult(2, { interviews: [] as any[] });
+      const offersData = readResult(3, { offers: [] as any[] });
+      const drivesData = readResult(4, { drives: [] as any[] });
+      const notifsData = readResult(5, { notifications: [] as any[] });
+      const logsData = readResult(6, { logs: [] as any[] });
 
       setJobs(jobsData.jobs || []);
       setApplications(appsData.applications || []);
