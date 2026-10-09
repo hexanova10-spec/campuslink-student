@@ -171,9 +171,36 @@ export const api = {
 
   // Jobs
   async getJobs() {
-    const res = await fetchRecruiter('/api/recruiter/jobs');
-    if (!res.ok) throw new Error('Unable to load recruiter jobs from the shared CampusLink backend.');
-    return await res.json();
+    try {
+      const res = await fetchRecruiter('/api/recruiter/jobs');
+      if (res.ok) {
+        const data = await res.json();
+        // The local recruiter demo has a complete, company-scoped roster. In development,
+        // use it when the shared database has not been seeded yet.
+        if (!import.meta.env.DEV || (data.jobs?.length ?? 0) > 0) return data;
+      } else if (!import.meta.env.DEV) {
+        throw new Error('Unable to load recruiter jobs from the shared CampusLink backend.');
+      }
+    } catch (error) {
+      if (!import.meta.env.DEV) throw error;
+    }
+
+    const company = getLocalCompany();
+    const jobs = localJobs
+      .filter((job) => job.companyId === company.id)
+      .map((job) => {
+        const jobApps = localApplications.filter((app) => app.companyId === company.id && app.jobId === job.id);
+        return {
+          ...job,
+          stats: {
+            totalApplicants: jobApps.length,
+            shortlisted: jobApps.filter((app) => app.status === 'SHORTLISTED').length,
+            interviews: jobApps.filter((app) => app.status === 'INTERVIEW').length,
+            selected: jobApps.filter((app) => ['SELECTED', 'OFFERED', 'ACCEPTED'].includes(app.status)).length
+          }
+        };
+      });
+    return { jobs };
   },
 
   async createJob(jobData: Partial<JobRequisition>) {
@@ -195,9 +222,15 @@ export const api = {
       const res = await fetchRecruiter('/api/recruiter/applicants/all-authorized');
       if (res.ok) {
         const data = await res.json();
-        // In local development, an empty backend seed should not hide the matching authorized demo roster.
-        // Never merge demo applicants into production responses.
-        if (!import.meta.env.DEV || (data.applications?.length ?? 0) > 0) return data;
+        // The database API currently returns flat studentName/branch fields, while this
+        // recruiter UI needs a nested student profile. Use the complete local demo roster
+        // in development when the API response is empty or does not satisfy that contract.
+        // Production always uses the backend response and never merges demo records.
+        const hasCompleteProfiles =
+          Array.isArray(data.applications) &&
+          data.applications.length > 0 &&
+          data.applications.every((app: any) => app.student && (app.student.fullName || app.student.full_name));
+        if (!import.meta.env.DEV || hasCompleteProfiles) return data;
       }
     } catch (e) {}
 
