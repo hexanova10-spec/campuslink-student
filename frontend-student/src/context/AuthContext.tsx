@@ -27,6 +27,28 @@ interface AuthContextType {
   loginAsDemoStudent: () => Promise<void>;
 }
 
+const DEMO_TOKEN = 'campuslink-demo-student-session';
+
+const DEMO_STUDENT: Student = {
+  id: 'demo-student-001',
+  user_id: 'demo-user-001',
+  roll_number: 'CL-DEMO-2026',
+  full_name: 'Siddharth Das',
+  mobile: '+91 98765 43210',
+  college_name: 'KIIT University, Bhubaneswar',
+  branch: 'Computer Science & Engineering',
+  degree: 'B.Tech',
+  graduation_year: 2027,
+  current_semester: 7,
+  avatar_url: '',
+  bio: 'Final-year Computer Science student focused on full-stack engineering, scalable systems, and campus placement readiness.',
+  target_role: 'Full Stack Developer',
+  preferred_locations: ['Bhubaneswar', 'Bangalore', 'Hyderabad', 'Pune', 'Remote'],
+  onboarding_completed: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,7 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function initAuth() {
       const storedToken = api.getToken();
-      if (storedToken) {
+      if (storedToken === DEMO_TOKEN) {
+        setUser({ id: DEMO_STUDENT.user_id, email: 'aarav.sharma@campus.edu', role: 'student' });
+        setStudent(DEMO_STUDENT);
+        setToken(DEMO_TOKEN);
+        setCurrentScreen('dashboard');
+      } else if (storedToken) {
         try {
           const res = await api.getMe();
           setUser({ id: res.user.id, email: res.user.email, role: 'student' });
@@ -49,8 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCurrentScreen('onboarding');
           }
         } catch (err) {
-          console.warn('Session verification failed, logging in as default student:', err);
-          await loginAsDemoStudent();
+          console.warn('Session verification failed:', err);
+          api.clearToken();
+          setToken(null);
+          setUser(null);
+          setStudent(null);
         }
       } else {
         // Real accounts only: users must sign in or create their own student account.
@@ -60,16 +90,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
+  // Frontend-only demo session: opens the demo dashboard without requiring a deployed API.
   const loginAsDemoStudent = async () => {
-    try {
-      const res = await api.login('aarav.sharma@campus.edu', 'student@123');
-      setUser({ id: res.student.user_id, email: 'aarav.sharma@campus.edu', role: 'student' });
-      setStudent(res.student);
-      setToken(res.token);
-      setCurrentScreen(res.student.onboarding_completed ? 'dashboard' : 'onboarding');
-    } catch (err) {
-      console.error('Demo login failed:', err);
-    }
+    api.setToken(DEMO_TOKEN);
+    setUser({ id: DEMO_STUDENT.user_id, email: 'aarav.sharma@campus.edu', role: 'student' });
+    setStudent(DEMO_STUDENT);
+    setToken(DEMO_TOKEN);
+    setCurrentScreen('dashboard');
   };
 
   const login = async (email: string, password: string) => {
