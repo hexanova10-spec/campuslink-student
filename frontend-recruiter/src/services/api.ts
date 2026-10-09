@@ -428,7 +428,10 @@ export const api = {
   async getDrives() {
     try {
       const res = await fetchRecruiter('/api/recruiter/drives');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (!import.meta.env.DEV || (data.drives?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
@@ -471,7 +474,10 @@ export const api = {
   async getInterviews() {
     try {
       const res = await fetchRecruiter('/api/recruiter/interviews');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (!import.meta.env.DEV || (data.interviews?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
@@ -572,7 +578,10 @@ export const api = {
   async getOffers() {
     try {
       const res = await fetchRecruiter('/api/recruiter/offers');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (!import.meta.env.DEV || (data.offers?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
@@ -709,7 +718,10 @@ ${company.name}`;
   async getNotifications() {
     try {
       const res = await fetchRecruiter('/api/recruiter/notifications');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (!import.meta.env.DEV || (data.notifications?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
@@ -731,7 +743,10 @@ ${company.name}`;
   async getAuditLogs() {
     try {
       const res = await fetchRecruiter('/api/recruiter/audit-logs');
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (!import.meta.env.DEV || (data.logs?.length ?? 0) > 0) return data;
+      }
     } catch (e) {}
 
     const company = getLocalCompany();
