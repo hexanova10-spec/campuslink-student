@@ -15,10 +15,25 @@ async function ensureRecruiterToken(): Promise<string> {
 }
 
 async function fetchRecruiter(input: RequestInfo | URL, init: RequestInit = {}) {
+  const requestWithToken = async (token: string) => {
+    const headers = new Headers(init.headers || {});
+    headers.set('Authorization', `Bearer ${token}`);
+    return fetch(input, { ...init, headers });
+  };
+
   const token = await ensureRecruiterToken();
-  const headers = new Headers(init.headers || {});
-  headers.set('Authorization', `Bearer ${token}`);
-  return fetch(input, { ...init, headers });
+  const response = await requestWithToken(token);
+
+  // Vite development sessions can outlive the short-lived backend JWT. If an API
+  // call is rejected, discard the stale token, bootstrap a fresh dev session, and
+  // retry this request once. Never mint demo sessions or retry credentials in production.
+  if (response.status === 401 && import.meta.env.DEV) {
+    localStorage.removeItem(RECRUITER_TOKEN_KEY);
+    const refreshedToken = await ensureRecruiterToken();
+    return requestWithToken(refreshedToken);
+  }
+
+  return response;
 }
 
 import {
