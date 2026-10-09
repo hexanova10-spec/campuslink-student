@@ -33,6 +33,53 @@ export const DashboardScreen: React.FC = () => {
   const fetchDashboard = async () => {
     setLoading(true);
     setError(null);
+
+    // The public demo is intentionally frontend-only, so it must not call /api.
+    if (api.getToken() === 'campuslink-demo-student-session') {
+      const demoStudent = student || {
+        id: 'demo-student-001',
+        user_id: 'demo-user-001',
+        full_name: 'Siddharth Das',
+        college_name: 'KIIT University, Bhubaneswar',
+        branch: 'Computer Science & Engineering',
+        target_role: 'Full Stack Developer',
+      };
+      const now = new Date().toISOString();
+      setData({
+        student: demoStudent as DashboardData['student'],
+        readinessScore: {
+          id: 'demo-readiness-001',
+          student_id: demoStudent.id,
+          overall_score: 78,
+          category: 'READY',
+          academic_factor: 82,
+          skill_factor: 76,
+          project_factor: 74,
+          resume_factor: 80,
+          mock_interview_factor: 70,
+          strengths: ['Core programming', 'Problem solving', 'Project experience'],
+          needs_improvement: ['System design', 'Interview communication'],
+          action_items: ['Practice mock interviews', 'Polish resume projects'],
+          calculated_at: now,
+        },
+        profileCompletion: 82,
+        resumeScore: 80,
+        skillCoverage: 76,
+        applicationsCount: 4,
+        upcomingInterviewsCount: 1,
+        upcomingInterviews: [],
+        offersCount: 0,
+        pendingOffers: [],
+        pendingDocumentsCount: 1,
+        unreadNotificationsCount: 3,
+        aiInsight: 'You are making good progress. Strengthen interview practice and highlight measurable outcomes in your projects.',
+        recommendedJobs: [],
+        targetRole: demoStudent.target_role || 'Full Stack Developer',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.getDashboard();
       setData(res);
