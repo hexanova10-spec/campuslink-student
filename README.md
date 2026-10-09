@@ -28,6 +28,15 @@ All three frontends proxy `/api/*` to `http://localhost:5000`.
 
 Install root dependencies, configure `backend/.env`, then run `npm run dev`.
 
+### Configure Gemini AI
+
+1. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Copy `backend/.env.example` to `backend/.env`.
+3. Put your key in `backend/.env` as `GEMINI_API_KEY=your_actual_key` (no quotes required).
+4. Restart the backend so dotenv loads the new environment variable.
+
+Keep the key only in the backend environment. Do **not** put it in a `VITE_*` variable, frontend code, or a committed file. The root `.gitignore` excludes `.env` files while allowing `.env.example` templates.
+
 Backend health check: `GET http://localhost:5000/api/health`.
 
 The three role frontends live directly in this monorepo. Their Vite dev servers run on ports 3001/3002/3003 and proxy `/api/*` to the shared backend on port 5000.
